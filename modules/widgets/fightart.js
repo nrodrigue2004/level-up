@@ -38,6 +38,56 @@
       A: { h: [70, 44], s: [73, 56], p: [78, 96], e: [86, 58], w: [96, 54], E: [80, 70], W: [90, 64], k: [100, 82], a: [110, 96], K: [98, 86], X: [108, 98] },
       B: { h: [86, 50], s: [88, 62], p: [98, 94], e: [96, 72], w: [92, 58], E: [100, 74], W: [96, 62], k: [120, 84], a: [140, 104], K: [118, 88], X: [138, 106] }, order: "AB" }
   };
+  // Technique sequences. Each frame starts from a base pose and overrides joints. who = which fighter is "you" ("B" = bottom).
+  // flip: roles swapped in this frame (after a sweep you end up on top). arrows: [x1,y1,x2,y2,curve].
+  const STAND_B = { h: [138, 30], s: [139, 41], p: [142, 70], e: [128, 50], w: [124, 36], E: [130, 48], W: [118, 38], k: [132, 88], a: [128, 108], K: [148, 89], X: [154, 108] };
+  const SEQS = {
+    hipbump: { name: "Hip-bump sweep to kimura", who: "B", frames: [
+      { base: "guard", B: { s: [64, 88], h: [54, 78], p: [88, 104], E: [56, 98], W: [48, 106], k: [108, 92], a: [120, 104], K: [104, 96], X: [116, 106] }, cap: "He postures up. Open your guard, sit up, and post your far hand behind you." },
+      { base: "guard", B: { s: [72, 78], h: [64, 68], p: [96, 94], e: [88, 62], w: [102, 54], E: [58, 96], W: [50, 106], k: [108, 96], a: [122, 106], K: [104, 98], X: [116, 106] }, arrows: [[92, 104, 108, 84, -8]], cap: "Reach over his shoulder and drive your hips up into him." },
+      { base: "guard", A: { h: [132, 76], s: [126, 82], p: [112, 98], e: [118, 92], w: [126, 104], E: [120, 90], W: [130, 100], k: [100, 86], a: [92, 100], K: [104, 88], X: [96, 102] }, B: { h: [100, 56], s: [100, 68], p: [92, 98], e: [112, 70], w: [124, 78], E: [106, 72], W: [118, 82], k: [80, 106], a: [62, 108], K: [84, 106], X: [66, 108] }, arrows: [[110, 60, 140, 92, 14]], cap: "Keep driving over the top. He falls back." },
+      { base: "mount", flip: true, cap: "Land in mount. If he blocks the sweep by posting his arm, go to the kimura instead." },
+      { base: "guard", A: { e: [100, 86], w: [96, 104] }, B: { s: [72, 82], h: [64, 72], p: [88, 104], e: [86, 96], w: [96, 102], E: [94, 66], W: [106, 84] }, cap: "Kimura: grab his posted wrist, reach over his shoulder and lock your own wrist (figure-four)." },
+      { base: "guard", A: { e: [112, 82], w: [126, 72] }, B: { e: [104, 74], w: [122, 72], E: [96, 70], W: [116, 76] }, arrows: [[100, 98, 126, 70, -16]], cap: "Fall back, close your guard, and rotate his hand up behind his back. Slow. Tap early in training." }
+    ] },
+    scissor: { name: "Scissor sweep", who: "B", frames: [
+      { base: "guard", B: { e: [72, 84], w: [94, 66], E: [70, 92], W: [94, 92] }, cap: "Grip his collar and the same-side sleeve." },
+      { base: "guard", B: { h: [42, 94], s: [54, 98], p: [86, 100], k: [112, 70], a: [100, 78], K: [112, 104], X: [138, 104] }, arrows: [[92, 106, 80, 96, 0]], cap: "Hip out to one side. Top shin goes across his belly, bottom leg flat on the mat behind his knee." },
+      { base: "guard", A: { h: [90, 60], s: [94, 68], p: [118, 86] }, B: { h: [42, 94], s: [54, 98], p: [86, 100], k: [110, 66], a: [98, 72], K: [112, 104], X: [138, 104] }, arrows: [[100, 54, 80, 58, 0]], cap: "Pull him forward with both grips so his weight comes onto your shin." },
+      { base: "guard", A: { h: [76, 98], s: [86, 96], p: [118, 92], k: [128, 80], a: [146, 76] }, B: { h: [62, 74], s: [70, 82], p: [96, 92], k: [112, 70], a: [124, 60], K: [100, 106], X: [78, 104] }, arrows: [[130, 64, 108, 50, -10], [138, 104, 110, 106, 0]], cap: "Scissor: top leg kicks him over while the bottom leg chops his knee." },
+      { base: "mount", flip: true, cap: "Follow him over and land in mount. Keep the sleeve grip." }
+    ] },
+    armbar: { name: "Armbar from guard", who: "B", frames: [
+      { base: "guard", A: { w: [80, 92] }, B: { e: [70, 94], w: [84, 90], E: [66, 88], W: [84, 82] }, cap: "Trap one arm across your chest. Both of your hands on it." },
+      { base: "guard", A: { w: [80, 92] }, B: { p: [84, 98], e: [70, 94], w: [84, 90], k: [112, 74], a: [116, 88] }, arrows: [[90, 104, 104, 106, 0]], cap: "Put your foot on his hip and swing your body to an angle." },
+      { base: "guard", A: { w: [80, 92] }, B: { p: [84, 98], e: [70, 94], w: [84, 90], k: [112, 74], a: [116, 88], K: [98, 50], X: [82, 42] }, arrows: [[120, 70, 90, 38, -14]], cap: "Swing your far leg over his head. Squeeze your knees together." },
+      { base: "guard", A: { h: [86, 64], s: [94, 70], e: [88, 82], w: [82, 92] }, B: { p: [90, 92], e: [72, 92], w: [80, 90], k: [112, 76], a: [118, 90], K: [92, 54], X: [76, 48] }, arrows: [[90, 104, 92, 86, 0]], cap: "His thumb points up. Lift your hips slowly to finish. Tap early in training." }
+    ] },
+    triangle: { name: "Triangle choke", who: "B", frames: [
+      { base: "guard", A: { w: [104, 76], W: [94, 94] }, B: { e: [72, 84], w: [100, 76] }, cap: "Push one of his hands into his own chest and keep the other arm out." },
+      { base: "guard", A: { w: [104, 76] }, B: { e: [72, 84], w: [100, 76], K: [104, 52], X: [94, 42] }, arrows: [[124, 82, 98, 44, -12]], cap: "Shoot your leg over the shoulder of the arm that's out." },
+      { base: "guard", A: { h: [96, 56], s: [100, 64] }, B: { K: [100, 54], X: [92, 44], k: [112, 60], a: [100, 48] }, cap: "Lock: the back of your knee goes over your own ankle." },
+      { base: "guard", A: { h: [90, 62], s: [96, 68], e: [92, 78], w: [86, 86] }, B: { p: [82, 98], w: [92, 60], W: [96, 64], K: [100, 58], X: [92, 48], k: [110, 64], a: [98, 50] }, arrows: [[70, 100, 66, 108, 0]], cap: "Cut an angle, pull his head down, and squeeze your knees." }
+    ] },
+    standup: { name: "Technical stand-up", who: "B", frames: [
+      { A: STAND_B, B: { h: [60, 62], s: [62, 74], p: [66, 104], e: [72, 76], w: [80, 66], E: [56, 92], W: [46, 106], k: [80, 86], a: [92, 106], K: [84, 98], X: [100, 104] }, cap: "Seated. Post the hand behind you and plant the opposite foot." },
+      { A: STAND_B, B: { h: [60, 62], s: [62, 74], p: [66, 102], e: [72, 76], w: [80, 66], E: [56, 92], W: [46, 106], k: [80, 86], a: [92, 106], K: [88, 82], X: [106, 76] }, arrows: [[96, 92, 112, 74, 0]], cap: "Free leg kicks up to keep him off you." },
+      { A: STAND_B, B: { h: [64, 52], s: [66, 64], p: [64, 88], e: [76, 66], w: [82, 58], E: [56, 90], W: [46, 106], k: [78, 96], a: [92, 106], K: [52, 98], X: [40, 106] }, arrows: [[100, 82, 44, 104, 18]], cap: "Lift your hips and swing that leg back under you, behind the post hand." },
+      { A: STAND_B, B: { h: [62, 30], s: [61, 41], p: [58, 70], e: [72, 50], w: [76, 36], E: [70, 48], W: [82, 38], k: [68, 88], a: [72, 108], K: [52, 89], X: [46, 108] }, cap: "Stand up in your stance, hands up, at a safe distance." }
+    ] },
+    kneecut: { name: "Knee-cut pass", who: "A", frames: [
+      { base: "guard", A: { h: [106, 50], s: [106, 60], e: [100, 76], w: [104, 92], E: [96, 74], W: [90, 96] }, B: { k: [108, 86], a: [118, 102], K: [104, 88], X: [114, 104] }, cap: "Open the guard. Pin one knee with your hand." },
+      { base: "guard", A: { h: [100, 56], s: [102, 66], p: [116, 86], k: [92, 100], a: [120, 108], w: [104, 92] }, B: { k: [108, 90], a: [120, 104], K: [104, 92], X: [116, 106] }, arrows: [[110, 106, 86, 100, 0]], cap: "Slide your knee across his thigh, toward the mat on the far side." },
+      { base: "guard", A: { h: [78, 80], s: [86, 84], p: [108, 88], e: [70, 94], w: [60, 100], E: [98, 92], W: [104, 98], k: [90, 104], a: [118, 108], K: [112, 104], X: [126, 108] }, B: { k: [114, 92], a: [130, 104], K: [110, 96], X: [128, 106] }, order: "BA", cap: "Crossface and get the underhook as you cut through." },
+      { base: "side", cap: "Free your leg and settle into side control. Hips low." }
+    ] }
+  };
+  function frame(id, i, opts = {}) {
+    const S = SEQS[id]; if (!S) return ""; const f = S.frames[i]; if (!f) return "";
+    const base = f.base ? POSES[f.base] : {}; const bB = base.B || (base.A ? mirror(base.A) : {});
+    const youTop = (S.who === "A") !== !!f.flip;
+    return draw({ A: Object.assign({}, base.A, f.A), B: Object.assign({}, bB, f.B), order: f.order || base.order || "BA", fence: base.fence, arrows: f.arrows }, youTop, id + " step " + (i + 1));
+  }
   const mirror = j => Object.fromEntries(Object.entries(j).map(([k, [x, y]]) => [k, [200 - x, y]]));
   const seg = (a, b, w, c, o = 1) => `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${c}" stroke-width="${w}" stroke-linecap="round" opacity="${o}"/>`;
   function fighter(j, col, dark) {
@@ -48,7 +98,10 @@
   }
   function pose(id, opts = {}) {
     const P = POSES[id]; if (!P) return "";
-    const A = P.A, B = P.B || mirror(A); const youTop = opts.you !== "bottom";
+    return draw({ A: P.A, B: P.B || mirror(P.A), order: P.order, fence: P.fence }, opts.you !== "bottom", id);
+  }
+  function draw(P, youTop, label) {
+    const A = P.A, B = P.B; const id = label;
     const cA = youTop ? ["var(--accent)", "color-mix(in srgb, var(--accent) 60%, #000)"] : ["#5b8fd6", "#3a6199"];
     const cB = youTop ? ["#5b8fd6", "#3a6199"] : ["var(--accent)", "color-mix(in srgb, var(--accent) 60%, #000)"];
     const order = (P.order || "BA").split("");
@@ -60,7 +113,16 @@
     return `<svg viewBox="${x0.toFixed(1)} ${y0.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}" class="fart" role="img" aria-label="${id} illustration">
       <line x1="${x0}" y1="112" x2="${x0 + w}" y2="112" stroke="var(--line-2, var(--line))" stroke-width="2" stroke-linecap="round"/>
       ${P.fence ? `<g stroke="var(--muted)" stroke-width="1" opacity=".55">${Array.from({ length: 8 }, (_, i) => `<line x1="${P.fence}" y1="${10 + i * 13}" x2="${P.fence + 12}" y2="${16 + i * 13}"/><line x1="${P.fence + 12}" y1="${10 + i * 13}" x2="${P.fence}" y2="${16 + i * 13}"/>`).join("")}<line x1="${P.fence}" y1="6" x2="${P.fence}" y2="112" stroke-width="2"/></g>` : ""}
-      ${body}</svg>`;
+      ${body}${(P.arrows || []).map(([x1, y1, x2, y2, c]) => { const mx = (x1 + x2) / 2 - (y2 - y1) * (c || 0) / 40, my = (y1 + y2) / 2 + (x2 - x1) * (c || 0) / 40; return `<path d="M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}" fill="none" stroke="var(--gold, #f2b33d)" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="1 4.5" marker-end="url(#fa-arr)"/>`; }).join("")}
+      <defs><marker id="fa-arr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--gold, #f2b33d)"/></marker></defs></svg>`;
   }
-  window.FightArt = { pose, ids: Object.keys(POSES) };
+  function seqWidget(el, o = {}, done) {
+    const S = SEQS[o.seq]; if (!S) { el.innerHTML = ""; return; } let i = 0;
+    const r = () => { el.innerHTML = `<div class="fart-wrap fart-seq"><div class="fart-top small"><b>${S.name}</b><span>Step ${i + 1} of ${S.frames.length}</span></div>${frame(o.seq, i)}<p class="fart-cap">${S.frames[i].cap}</p>
+      <div class="row"><button class="btn ghost grow" data-fa="-1" ${i ? "" : "disabled"}>Back</button><button class="btn grow" data-fa="1">${i < S.frames.length - 1 ? "Next step" : "Done"}</button></div></div>`; };
+    el.onclick = e => { const b = e.target.closest("[data-fa]"); if (!b) return; const d = +b.dataset.fa; if (d > 0 && i === S.frames.length - 1) { if (done) done({ graded: false }); return; } i = Math.max(0, Math.min(S.frames.length - 1, i + d)); r(); };
+    r();
+  }
+  if (window.App) { window.App.widgets = window.App.widgets || {}; window.App.widgets.frames = { mount: seqWidget }; }
+  window.FightArt = { pose, frame, seqs: Object.fromEntries(Object.entries(SEQS).map(([k, v]) => [k, { name: v.name, steps: v.frames.map(f => f.cap) }])), ids: Object.keys(POSES) };
 })();

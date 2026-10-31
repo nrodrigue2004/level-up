@@ -85,7 +85,7 @@
   var SKIP_CLASS = /rh-term|rh-lab|rh-bits|rh-email|rh-def|rh-pm-tag|rh-chip2|rh-bar|rh-meter/;
   function skipNode(node) {
     for (var p = node.parentNode; p && p.nodeType === 1; p = p.parentNode) {
-      if (SKIP_TAGS[p.tagName]) return true;
+      if (SKIP_TAGS[String(p.tagName).toUpperCase()]) return true;
       if (p.className && typeof p.className === 'string' && SKIP_CLASS.test(p.className)) return true;
     }
     return false;

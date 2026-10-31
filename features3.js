@@ -189,9 +189,9 @@ function techCard() {
   try { const t = L.techniqueOfWeek(); if (!t) return ""; return `<div class="card"><h2>🥋 Technique of the week</h2><b>${esc(t.title)}</b>${t.summary ? `<div class="small muted">${esc(t.summary)}</div>` : ""}<button class="btn ghost small" style="margin-top:8px" data-f3="tech">Study it</button></div>`; } catch { return ""; }
 }
 function scoreCard() {
-  const L = A.store("learn"), ex = (L.exams || []).slice(-8), ar = A.store("arena").best || {}, boss = A.store("arena").boss || {}, geo = A.store("geo").known || {};
+  const L = A.store("learn"), allEx = L.exams || [], ex = allEx.filter(e => e.scale !== "pct" && (!e.subj || e.subj === "secplus")).slice(-8), pct = allEx.filter(e => e.scale === "pct"), lastPct = pct[pct.length - 1], ar = A.store("arena").best || {}, boss = A.store("arena").boss || {}, geo = A.store("geo").known || {};
   const kos = Object.values(boss).filter(b => b.ko).length, places = Object.keys(geo).length;
-  if (!ex.length && !Object.keys(ar).length && !places) return "";
+  if (!allEx.length && !Object.keys(ar).length && !places) return "";
   const lo = Math.max(100, Math.min(600, ...ex.map(e => e.score)) - 50), W = 300, H = 110, x = i => 10 + i * (W - 20) / Math.max(1, ex.length - 1), y = v => H - 8 - (v - lo) / (900 - lo) * (H - 16);
   const chart = ex.length ? `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;margin:6px 0">
       <line x1="0" x2="${W}" y1="${y(750)}" y2="${y(750)}" stroke="var(--gold)" stroke-dasharray="4 4" stroke-width="1"/><text x="4" y="${y(750) - 4}" text-anchor="start" font-size="10" fill="var(--gold)">750 pass</text>
@@ -199,9 +199,9 @@ function scoreCard() {
       ${ex.map((e, i) => `<circle cx="${x(i)}" cy="${y(e.score)}" r="3.5" fill="${e.score >= 750 ? "var(--gold)" : "var(--accent)"}"/>`).join("")}</svg>` : "";
   const last = ex[ex.length - 1];
   return `<div class="card"><h2>📊 Scorecard</h2>
-    ${last ? `<div class="row"><div class="grow"><div class="small muted">Practice exams</div><b style="font-family:var(--display);font-size:28px">${last.score}</b> <span class="small muted">last of ${ex.length} · ${last.score >= 750 ? "passing" : (750 - last.score) + " to pass"}</span></div></div>${chart}` : `<div class="small muted">Take a practice exam in Learn to start your readiness line.</div>`}
+    ${last ? `<div class="row"><div class="grow"><div class="small muted">Security+ practice exams</div><b style="font-family:var(--display);font-size:28px">${last.score}</b> <span class="small muted">last of ${ex.length} · ${last.score >= 750 ? "passing" : (750 - last.score) + " to pass"}</span></div></div>${chart}` : `<div class="small muted">Take a practice exam in Learn to start your readiness line.</div>`}
     <div class="row" style="gap:8px;margin-top:6px;flex-wrap:wrap">
-      ${[["Speed", ar.speed], ["Survival", ar.survival], ["Acronyms", ar.acro], ["Bosses KO'd", kos], ["Places found", places]].filter(([, v]) => v != null).map(([k, v]) => `<div class="grow" style="background:var(--card-2);border-radius:10px;padding:8px 10px;min-width:80px"><div class="small muted">${k}</div><b style="font-family:var(--display);font-size:22px">${v}</b></div>`).join("")}
+      ${[[lastPct ? (lastPct.subj || "").toUpperCase() + " mock" : "", lastPct ? lastPct.score + "%" : null], ["Speed", ar.speed], ["Survival", ar.survival], ["Acronyms", ar.acro], ["Bosses KO'd", kos], ["Places found", places]].filter(([, v]) => v != null).map(([k, v]) => `<div class="grow" style="background:var(--card-2);border-radius:10px;padding:8px 10px;min-width:80px"><div class="small muted">${k}</div><b style="font-family:var(--display);font-size:22px">${v}</b></div>`).join("")}
     </div></div>`;
 }
 function mapCard() {

@@ -215,3 +215,6 @@ details.section summary .count { font-family: var(--display); font-size: 15px; l
 .routines button > span:first-child .ic { width: 19px; height: 19px; }
 .routines button small { grid-column: 2; font-size: 12px; line-height: 1.2; }
 .routines button, .routines button.wide { justify-items: start; text-align: left; } .routines button small { justify-self: start; text-align: left; }
+.fart-top { display: flex; justify-content: space-between; color: var(--muted); margin-bottom: 4px; }
+.fart-top b { color: var(--text); font-family: var(--display); text-transform: uppercase; letter-spacing: .04em; font-size: 15px; }
+.fart-cap { margin: 6px 0 10px; font-size: 15px; line-height: 1.4; min-height: 3em; }
