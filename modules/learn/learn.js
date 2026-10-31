@@ -328,6 +328,14 @@
         '<span class="play">' + ICON.play + '</span><span class="t"><b>Quick refresher check</b><span>5 questions to find where you left off. No grades, no pressure.</span></span>');
       host.appendChild(pc);
     }
+    if (s.exam) {
+      var last = (d.exams || []).slice(-1)[0];
+      host.appendChild(h('button', { class: 'rh-cont', style: 'background:var(--bad)', 'data-exam': s.id },
+        '<span class="play">\u23F1\uFE0F</span><span class="t"><b>Full mock exam \u00b7 90 questions \u00b7 90 min</b><span>PBQs first, domains weighted like the real ' + esc(s.exam) + '. Scored 100\u2013900' + (last ? ' \u00b7 last: ' + last.score : '') + '.</span></span>'));
+    }
+    var dl = d.depth == null ? 1 : d.depth, seg = h('div', { class: 'rh-seg', role: 'group', 'aria-label': 'Detail level' });
+    seg.innerHTML = '<span>Detail</span>' + ['Simple', 'Standard', 'Deep'].map(function (n, i) { return '<button data-depth="' + i + '" class="' + (i === dl ? 'on' : '') + '">' + n + '</button>'; }).join('');
+    host.appendChild(seg);
     if (genCards(s.id).length) {
       host.appendChild(h('button', { class: 'rh-cont', style: 'background:var(--good)', 'data-drill': s.id },
         '<span class="play">\uD83C\uDFAF</span><span class="t"><b>Practice drill</b><span>10 freshly generated problems. New numbers every time, so you\'re learning the skill, not memorizing answers.</span></span>'));
@@ -349,7 +357,7 @@
 
   function bind(host) {
     host.onclick = function (e) {
-      var t = e.target.closest('[data-lesson],[data-subject],[data-home],[data-mix],[data-surprise],[data-unsave],[data-placement],[data-drill]');
+      var t = e.target.closest('[data-lesson],[data-subject],[data-home],[data-mix],[data-surprise],[data-unsave],[data-placement],[data-drill],[data-exam],[data-depth]');
       if (!t) return;
       if (t.dataset.unsave) { var d = data(); d.saved = d.saved.filter(function (x) { return x !== t.dataset.unsave; }); A.save(); rerender(); return; }
       if (t.dataset.home) { LV.view = 'home'; rerender(); return; }
@@ -358,6 +366,8 @@
       if (t.dataset.mix) { startMixed(t.dataset.mix); return; }
       if (t.dataset.placement) { startPlacement(t.dataset.placement); return; }
       if (t.dataset.drill) { startDrill(t.dataset.drill); return; }
+      if (t.dataset.exam) { startExam(t.dataset.exam); return; }
+      if (t.dataset.depth) { data().depth = +t.dataset.depth; A.save(); t.parentNode.querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', b === t); }); A.toast(['Simple: plain-English versions first', 'Standard detail', 'Deep: exam-level extras open automatically'][+t.dataset.depth]); return; }
       if (t.dataset.surprise) {
         var d2 = data(), pool = Object.keys(LESSONS).filter(function (id) { return !d2.done[id]; });
         var all = pool.length ? pool : Object.keys(LESSONS); startLesson(all[Math.floor(Math.random() * all.length)]);
@@ -369,13 +379,16 @@
      PLAYER
      ======================================================================= */
   var P = null, STACK = [], playerEl = null;
-  var GRADED = ['gen', 'mcq', 'tf', 'fill', 'calc', 'match', 'order', 'bits', 'cipher', 'phish', 'term'];
+  var GRADED = ['gen', 'pbq', 'widget', 'mcq', 'tf', 'fill', 'calc', 'match', 'order', 'bits', 'cipher', 'phish', 'term'];
 
   function startLesson(id, fromHole) {
     var L = LESSONS[id]; if (!L) return;
     if (P && fromHole) STACK.push(P); else if (!fromHole) STACK.length = 0;
     var d = data(); d.trail = d.trail.filter(function (x) { return x !== id; }).concat(id).slice(-40); A.save();
-    P = { mode: 'lesson', id: id, title: L.l.title, subj: L.s, cards: L.l.cards.map(function (c, i) { return { c: c, k: id + '#' + i }; }), i: 0, right: 0, graded: 0, xp: 0, combo: 0, best: 0, t0: Date.now() };
+    var cards = L.l.cards.map(function (c, i) { return { c: c, k: id + '#' + i }; });
+    var missing = (L.l.pre || []).filter(function (x) { return LESSONS[x] && !d.done[x]; });
+    if (missing.length && !fromHole) cards.unshift({ c: { t: 'prereq', ids: missing }, k: id + '#pre' });
+    P = { mode: 'lesson', id: id, title: L.l.title, subj: L.s, cards: cards, i: 0, right: 0, graded: 0, xp: 0, combo: 0, best: 0, t0: Date.now() };
     openPlayer();
   }
   // anti-repetition: prefer questions not served recently, then record what we served
@@ -438,12 +451,47 @@
     openPlayer();
   }
 
+  /* Timed mock exam: real SY0-701 shape. PBQs first, then multiple choice weighted by domain, 90 min, scaled 100-900, 750 passes. */
+  var EXAM_W = { 1: 12, 2: 22, 3: 18, 4: 28, 5: 20 };
+  function startExam(subjId) {
+    subjId = subjId || 'secplus';
+    var sj = SUBJECTS.filter(function (x) { return x.id === subjId; })[0]; if (!sj) return;
+    var byDom = {}, pbqs = [];
+    Object.keys(LESSONS).forEach(function (id) {
+      var L = LESSONS[id]; if (L.s.id !== subjId || !L.u.dom) return;
+      L.l.cards.forEach(function (c, i) {
+        var it = { c: c, k: id + '#' + i, dom: L.u.dom };
+        if (c.t === 'pbq') pbqs.push(it); else if (c.t === 'mcq' || c.t === 'tf' || c.t === 'gen') (byDom[L.u.dom] = byDom[L.u.dom] || []).push(it);
+      });
+    });
+    var cards = shuffle(pbqs).slice(0, 4), want = 90 - cards.length;
+    Object.keys(EXAM_W).forEach(function (dm) {
+      var pool = byDom[dm] || [], n = Math.round(want * EXAM_W[dm] / 100), got = pickFresh(pool, n);
+      while (got.length < n && pool.length && got.length < pool.length * 2) got.push(pick(pool.filter(function (x) { return x.c.t === 'gen'; }).concat(pool)));
+      cards = cards.concat(shuffle(got));
+    });
+    if (cards.length < 10) { A.toast('Not enough questions yet'); return; }
+    cards = cards.slice(0, 4).concat(shuffle(cards.slice(4)));
+    STACK.length = 0;
+    P = { mode: 'exam', subjId: subjId, id: null, title: sj.name + ' mock exam', subj: sj, cards: cards, i: 0, right: 0, graded: 0, xp: 0, combo: 0, best: 0, t0: Date.now(), deadline: Date.now() + 90 * 60000, dom: {} };
+    openPlayer();
+  }
+  var examTick = null;
+  function tickExam() {
+    if (!P || P.mode !== 'exam') { clearInterval(examTick); examTick = null; return; }
+    var left = Math.max(0, P.deadline - Date.now()), el = playerEl && playerEl.querySelector('#rhTimer');
+    if (el) { el.textContent = Math.floor(left / 60000) + ':' + ('0' + Math.floor(left % 60000 / 1000)).slice(-2); el.style.color = left < 300000 ? 'var(--bad)' : ''; }
+    if (!left && P.i < P.cards.length) { P.i = P.cards.length; A.toast('Time! Exam submitted.'); renderCard(); }
+  }
+
   function openPlayer() {
     if (!playerEl) { playerEl = h('div', { class: 'rh-player', role: 'dialog', 'aria-modal': 'true' }); document.body.appendChild(playerEl); }
     playerEl.hidden = false; document.documentElement.style.overflow = 'hidden';
+    playerEl.classList.toggle('exam', P.mode === 'exam');
+    if (P.mode === 'exam' && !examTick) examTick = setInterval(tickExam, 1000);
     renderCard();
   }
-  function closePlayer() { stopSpeak(); P = null; STACK.length = 0; if (playerEl) { playerEl.hidden = true; playerEl.innerHTML = ''; } document.documentElement.style.overflow = ''; rerender(); }
+  function closePlayer() { stopSpeak(); if (examTick) { clearInterval(examTick); examTick = null; } P = null; STACK.length = 0; if (playerEl) { playerEl.hidden = true; playerEl.innerHTML = ''; } document.documentElement.style.overflow = ''; rerender(); }
 
   /* ---- audio mode: free, offline browser text-to-speech ---- */
   var TTS = ('speechSynthesis' in window);
@@ -465,7 +513,7 @@
       '<div class="bar"><i style="width:' + (P.i / P.cards.length * 100) + '%"></i></div>' +
       (TTS ? '<button class="rh-ibtn" id="rhAudio" aria-label="Listen" style="font-size:17px">' + (data().audio ? '\uD83D\uDD0A' : '\uD83D\uDD08') + '</button>' : '') +
       (P.mode === 'lesson' ? '<button class="rh-ibtn" id="rhSave" aria-label="Save lesson" style="font-size:18px">\u2606</button>' : '') +
-      '<span class="rh-combo" id="rhCombo">' + (P.combo > 1 ? '×' + P.combo : '') + '</span></div>' +
+      (P.mode === 'exam' ? '<span class="rh-timer" id="rhTimer"></span>' : '<span class="rh-combo" id="rhCombo">' + (P.combo > 1 ? '×' + P.combo : '') + '</span>') + '</div>' +
       '<div class="rh-pbody" id="rhBody"><div class="pad"><div class="rh-crumb">' + (depth ? '<span class="depth">' + depth + ' level' + (depth > 1 ? 's' : '') + ' deep:</span>' : '') + crumbs + '</div><div id="rhCard"></div></div></div>' +
       '<div class="rh-pfoot"><div class="pad" id="rhFoot"></div></div>';
     $('#rhClose', playerEl).onclick = function () { if (STACK.length) climbOut(); else closePlayer(); };
@@ -479,6 +527,7 @@
     playerFrame();
     if (P.i >= P.cards.length) return renderFinish();
     var item = P.cards[P.i], c = item.c;
+    if (P.mode === 'exam') setTimeout(tickExam, 0);
     var cardHost = $('#rhCard', playerEl), foot = $('#rhFoot', playerEl);
     var graded = GRADED.indexOf(c.t) >= 0;
     var cont = h('button', { class: 'rh-btn block', disabled: graded }, P.i === P.cards.length - 1 ? 'Finish' : 'Continue');
@@ -501,6 +550,7 @@
 
   function grade(item, correct) {
     P.graded++;
+    if (item.dom) { var dd = P.dom[item.dom] = P.dom[item.dom] || [0, 0]; dd[1]++; if (correct) dd[0]++; }
     var cb = $('#rhCombo', playerEl);
     if (correct) {
       P.right++; P.combo++; P.best = Math.max(P.best, P.combo);
@@ -530,6 +580,10 @@
       A.award('learn:snack:' + dayStr(), 10, 'mind');
     } else if (P.mode === 'review') {
       A.award('learn:review:' + dayStr(), 15, 'mind');
+    } else if (P.mode === 'exam') {
+      var sc = Math.round(100 + 800 * (P.graded ? P.right / P.graded : 0));
+      d.exams = (d.exams || []).concat({ at: dayStr(), score: sc, n: P.graded }).slice(-20);
+      A.award('learn:exam:' + P.subjId + ':' + dayStr(), sc >= 750 ? 80 : 40, 'mind');
     } else if (P.mode === 'drill') {
       A.award('learn:drill:' + P.subjId + ':' + dayStr(), 10, (P.subj && P.subj.stat) || 'mind');
     } else if (P.mode === 'quiz') {
@@ -553,6 +607,15 @@
     var nextInUnit = L ? L.u.lessons[L.idx + 1] : null;
     var mins = P.t0 ? Math.max(1, Math.round((Date.now() - P.t0) / 60000)) : null;
 
+    if (P.mode === 'exam') {
+      clearInterval(examTick); examTick = null; playerEl.classList.remove('exam');
+      var score = Math.round(100 + 800 * acc), passed = score >= 750, DN = { 1: 'General security concepts', 2: 'Threats, vulns & mitigations', 3: 'Security architecture', 4: 'Security operations', 5: 'Program management' };
+      cardHost.innerHTML = '<div class="rh-card" style="gap:14px"><div style="text-align:center"><div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:800" class="muted">Scaled score (estimate)</div>' +
+        '<div style="font-family:var(--disp);font-size:54px;color:' + (passed ? 'var(--good)' : 'var(--bad)') + '">' + score + '</div><p class="muted" style="margin:0">' + (passed ? 'Passing range. The real exam needs 750 of 900.' : 'The real exam needs 750 of 900. Your misses went into Review.') + ' ' + P.right + '/' + P.graded + ' answered right' + (P.graded < P.cards.length ? ', ' + (P.cards.length - P.graded) + ' unanswered' : '') + (mins ? ', ' + mins + ' min' : '') + '.</p></div>' +
+        Object.keys(DN).map(function (k) { var v = P.dom[k] || [0, 0], pc = v[1] ? Math.round(v[0] / v[1] * 100) : 0; return '<div><div style="display:flex;justify-content:space-between;font-size:14px"><b>' + k + '.0 ' + DN[k] + '</b><span>' + v[0] + '/' + v[1] + '</span></div><div class="rh-bar"><i style="width:' + pc + '%;background:' + (pc >= 80 ? 'var(--good)' : pc >= 60 ? 'var(--accent)' : 'var(--bad)') + '"></i></div></div>'; }).join('') +
+        '<p class="muted" style="margin:0;font-size:13px">Weakest domain first: go back to its lessons, then run Review before the next mock.</p></div>';
+      var dn = h('button', { class: 'rh-btn block' }, 'Done'); dn.onclick = closePlayer; foot.appendChild(dn); return;
+    }
     if (P.mode === 'placement') {
       var msg = data().placement[P.subjId];
       cardHost.innerHTML = '<div class="rh-card" style="text-align:center;align-items:center;gap:16px">' +
@@ -615,15 +678,79 @@
     read: ['', 'Learn'], mcq: ['', 'Quick check'], tf: ['', 'True or false'], fill: ['', 'Recall'], calc: ['', 'Work it out'],
     match: ['hands', 'Match up'], order: ['hands', 'Put in order'], term: ['hands', 'Terminal'], bits: ['hands', 'Flip the bits'],
     cipher: ['hands', 'Crack it'], hashlab: ['hands', 'Lab · hashing'], pwlab: ['hands', 'Lab · passwords'], cidr: ['hands', 'Lab · subnets'],
-    gatelab: ['hands', 'Lab · logic gates'], sortlab: ['hands', 'Lab · sorting'], phish: ['hands', 'Spot the phish'], posmap: ['hands', 'Position map'], compass: ['hands', 'Career compass'], deep: ['holek', 'Rabbit hole']
+    gatelab: ['hands', 'Lab · logic gates'], sortlab: ['hands', 'Lab · sorting'], phish: ['hands', 'Spot the phish'], pbq: ['hands', 'PBQ \u00b7 performance-based'], explain: ['', 'Explain it back'], watch: ['', 'Video'], prereq: ['', 'Before you start'], widget: ['hands', 'Interactive'], posmap: ['hands', 'Position map'], compass: ['hands', 'Career compass'], deep: ['holek', 'Rabbit hole']
   };
   function kindTag(el, t) { var k = KIND[t] || KIND.read; el.appendChild(h('span', { class: 'rh-kind ' + k[0] }, '<i></i>' + k[1])); }
   function why(el, ok, text, extra) {
+    if (P && P.mode === 'exam') { el.appendChild(h('div', { class: 'rh-why', role: 'status' }, '<b>Answer locked in.</b> Results at the end, like the real exam.')); return; }
     var w = h('div', { class: 'rh-why ' + (ok ? 'good' : 'bad'), role: 'status' }, '<b>' + (ok ? pick(['Nice.', 'Yes.', 'Correct.', 'Got it.', 'Nailed it.']) : 'Not quite.') + '</b>' + (extra ? extra + ' ' : '') + (text || ''));
     el.appendChild(w); bindHoles(w); autoDefine(w); setTimeout(function () { w.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 30);
   }
 
+  var MESSER = 'https://www.professormesser.com/security-plus/sy0-701/sy0-701-video/sy0-701-comptia-security-plus-course/';
   var RENDER = {
+    pbq: function (el, c, done) {
+      kindTag(el, 'pbq'); if (c.h) el.appendChild(h('h3', {}, c.h));
+      el.appendChild(h('div', { class: 'rh-body' }, c.scenario || ''));
+      var tbl = h('div', { class: 'rh-pbq' });
+      var sels = c.rows.map(function (r) {
+        var row = h('div', { class: 'rh-pbq-row' }); row.appendChild(h('div', { class: 'lbl' }, r.label));
+        var sel = h('select', { class: 'rh-sel', 'aria-label': 'Answer' }); sel.appendChild(h('option', { value: '' }, 'Choose\u2026'));
+        (r.opts || c.opts).forEach(function (o, j) { sel.appendChild(h('option', { value: String(j) }, o)); });
+        row.appendChild(sel); tbl.appendChild(row); return sel;
+      });
+      el.appendChild(tbl);
+      var b = h('button', { class: 'rh-btn sm', style: 'align-self:flex-start' }, 'Submit'); el.appendChild(b);
+      b.onclick = function () {
+        if (sels.some(function (x) { return x.value === ''; })) { A.toast('Answer every row first'); return; }
+        var right = 0, exam = P && P.mode === 'exam';
+        sels.forEach(function (x, i) {
+          var r = c.rows[i], ok = +x.value === r.a; if (ok) right++; x.disabled = true;
+          if (!exam) { x.classList.add(ok ? 'right' : 'wrong'); if (!ok) x.parentNode.appendChild(h('small', { class: 'rh-pbq-fix' }, '\u2713 ' + esc((r.opts || c.opts)[r.a]) + (r.why ? ': ' + r.why : ''))); }
+        });
+        b.remove(); var all = right === sels.length;
+        why(el, all, '<b>' + right + ' of ' + sels.length + ' rows right.</b> ' + (c.why || '')); done({ correct: all });
+      };
+    },
+    explain: function (el, c, done) {
+      kindTag(el, 'explain'); el.appendChild(h('div', { class: 'rh-q' }, c.q));
+      el.appendChild(h('p', { class: 'muted', style: 'margin:0;font-size:14px' }, 'Teach it like you\'re explaining to a friend. Typing or dictating it is the fastest way to find the gaps in what you know.'));
+      var ta = h('textarea', { class: 'rh-ta', rows: '5', placeholder: 'Your explanation\u2026', 'aria-label': 'Your explanation' }); el.appendChild(ta);
+      var row = h('div', { class: 'rh-depthbar' }), chk = h('button', { class: 'rh-btn sm' }, 'Check myself'), cp = h('button', { class: 'rh-btn sm ghost' }, 'Copy for AI grading');
+      row.appendChild(chk); row.appendChild(cp); el.appendChild(row);
+      var fired = false; function fin() { if (!fired) { fired = true; done({ graded: false }); } }
+      chk.onclick = function () {
+        chk.remove(); var box = h('div', { class: 'rh-callout' }, '<b>Did you cover these?</b> Tap each one you hit.'), got = 0;
+        c.points.forEach(function (pt) { var lb = h('label', { class: 'rh-pt' }, '<input type="checkbox"> ' + pt); lb.querySelector('input').onchange = function (e) { got += e.target.checked ? 1 : -1; tally.textContent = got + ' of ' + c.points.length + (got === c.points.length ? '. You own this one.' : '. Read the ones you missed out loud once.'); }; box.appendChild(lb); });
+        var tally = h('div', { class: 'muted', style: 'font-size:14px;margin-top:6px' }, '0 of ' + c.points.length); box.appendChild(tally);
+        el.appendChild(box); autoDefine(box); fin();
+      };
+      cp.onclick = function () {
+        var txt = 'You are grading my explanation of a ' + ((P && P.subj && P.subj.name) || '') + ' concept. Be encouraging but strict and specific.\n\nQuestion: ' + c.q.replace(/<[^>]+>/g, '') + '\n\nKey points a complete answer covers:\n- ' + c.points.map(function (x) { return x.replace(/<[^>]+>/g, ''); }).join('\n- ') + '\n\nMy explanation:\n' + (ta.value.trim() || '(I did not type one yet. Quiz me on it instead.)') + '\n\nGive me: (1) a score out of 10, (2) anything I got wrong, (3) which key points I missed, (4) a short model answer in plain English, (5) one follow-up question to test me.';
+        var ok = function () { A.toast('Copied. Paste it into Claude or ChatGPT.'); };
+        try { navigator.clipboard.writeText(txt).then(ok, function () { ta.value = txt; ta.select(); A.toast('Select all and copy'); }); } catch (e) { ta.value = txt; ta.select(); }
+        fin();
+      };
+    },
+    watch: function (el, c, done) {
+      kindTag(el, 'watch'); el.appendChild(h('h3', {}, 'Watch the matching video'));
+      el.appendChild(h('div', { class: 'rh-body' }, '<p>Professor Messer\'s free SY0-701 course, section <b>' + esc(c.obj) + ' ' + esc(c.title) + '</b>. Watch it after this lesson. Seeing it explained a second way, by a different voice, is how it sticks.</p>'));
+      el.appendChild(h('a', { class: 'rh-btn sm', href: c.url || MESSER, target: '_blank', rel: 'noopener', style: 'align-self:flex-start;text-decoration:none' }, 'Open the video list \u2197'));
+      done({ graded: false });
+    },
+    prereq: function (el, c, done) {
+      kindTag(el, 'prereq'); el.appendChild(h('h3', {}, 'This builds on'));
+      el.appendChild(h('p', { class: 'muted', style: 'margin:0' }, 'You haven\'t done these yet. Tap one for a quick look and you\'ll come right back, or just keep going if you already know it.'));
+      c.ids.forEach(function (id) { el.appendChild(h('button', { class: 'rh-holelink', 'data-hole': id, style: 'align-self:flex-start;text-align:left' }, '\uD83D\uDC07 ' + esc(LESSONS[id].l.title) + ' \u2192')); });
+      done({ graded: false });
+    },
+    widget: function (el, c, done) {
+      var W = window.App && window.App.widgets && window.App.widgets[c.w];
+      if (!W || !W.mount) { RENDER.read(el, { h: c.h || 'Interactive', body: c.fallback || '<p>This interactive is coming in an app update. Keep going for now.</p>' }, function () { done({ graded: false }); }); return; }
+      kindTag(el, 'widget'); if (c.h) el.appendChild(h('h3', {}, c.h));
+      var box = h('div', { class: 'rh-widget' }); el.appendChild(box);
+      try { W.mount(box, c.o || {}, function (res) { done(res || { graded: false }); }); } catch (e) { done({ graded: false }); }
+    },
     /* gen: calls a registered generator (window.RH_GEN[name]) for a brand-new problem each time it shows up */
     gen: function (el, c, done) {
       var f = (window.RH_GEN || {})[c.g], made = null;
@@ -634,7 +761,18 @@
     },
     read: function (el, c, done) {
       kindTag(el, 'read'); if (c.h) el.appendChild(h('h3', {}, c.h));
-      el.appendChild(h('div', { class: 'rh-body' }, c.body));
+      var dl = data().depth == null ? 1 : data().depth;
+      var body = h('div', { class: 'rh-body' }, dl === 0 && c.simple ? c.simple : c.body); el.appendChild(body);
+      if (c.simple || c.deeper) {
+        var bar = h('div', { class: 'rh-depthbar' }), simpleOn = dl === 0 && !!c.simple;
+        if (c.simple) { var sb = h('button', { class: 'rh-chipbtn' }, simpleOn ? 'Full version' : 'Explain simpler'); sb.onclick = function () { simpleOn = !simpleOn; body.innerHTML = simpleOn ? c.simple : c.body; sb.textContent = simpleOn ? 'Full version' : 'Explain simpler'; autoDefine(body); bindHoles(body); }; bar.appendChild(sb); }
+        if (c.deeper) {
+          var dp = h('div', { class: 'rh-body rh-deeper', hidden: dl !== 2 }, '<span class="eyebrow">Deeper \u00b7 exam level</span>' + c.deeper);
+          var db = h('button', { class: 'rh-chipbtn' }, dl === 2 ? 'Hide deeper' : 'Go deeper');
+          db.onclick = function () { dp.hidden = !dp.hidden; db.textContent = dp.hidden ? 'Go deeper' : 'Hide deeper'; if (!dp.hidden) { autoDefine(dp); bindHoles(dp); } };
+          bar.appendChild(db); el.appendChild(bar); el.appendChild(dp);
+        } else el.appendChild(bar);
+      }
       if (c.mem) el.appendChild(h('div', { class: 'rh-callout mem' }, '<b>Remember it: </b>' + c.mem));
       done({ graded: false });
     },
@@ -697,7 +835,7 @@
       order.forEach(function (i) {
         var b = h('button', { class: 'rh-opt' }, c.opts[i]);
         b.onclick = function () {
-          if (locked) return; locked = true; var ok = i === c.a; b.classList.add(ok ? 'right' : 'wrong');
+          if (locked) return; locked = true; var ok = i === c.a; b.classList.add(ok ? 'right' : 'wrong', 'picked');
           if (!ok) opts.children[order.indexOf(c.a)].classList.add('right');
           [].forEach.call(opts.children, function (x) { x.disabled = true; });
           why(el, ok, c.why); done({ correct: ok });
@@ -712,7 +850,7 @@
       [true, false].forEach(function (v) {
         var b = h('button', { class: 'rh-opt' }, v ? 'True' : 'False');
         b.onclick = function () {
-          if (row.dataset.l) return; row.dataset.l = 1; var ok = v === c.a; b.classList.add(ok ? 'right' : 'wrong');
+          if (row.dataset.l) return; row.dataset.l = 1; var ok = v === c.a; b.classList.add(ok ? 'right' : 'wrong', 'picked');
           if (!ok) row.children[c.a ? 0 : 1].classList.add('right');
           [].forEach.call(row.children, function (x) { x.disabled = true; }); why(el, ok, c.why); done({ correct: ok });
         };
@@ -950,6 +1088,7 @@
       window.App.registerTab({ id: 'learn', label: 'Learn', icon: '🧠', render: render });
       // let the shell add a Today-screen shortcut and read the review badge
       window.App.learn = {
+        exam: function (subj) { A.go('learn'); startExam(subj || 'secplus'); },
         randomRabbitHole: function () { A.go('learn'); var d = data(), pool = Object.keys(LESSONS).filter(function (id) { return !d.done[id]; }); var all = pool.length ? pool : Object.keys(LESSONS); if (all.length) startLesson(all[Math.floor(Math.random() * all.length)]); },
         openSubject: function (id) { A.go('learn'); if (SUBJECTS.filter(function (s) { return s.id === id; })[0]) { LV.view = 'subject'; LV.subj = id; rerender(); } },
         dueReviewCount: function () { try { return dueReviews().length; } catch (e) { return 0; } },

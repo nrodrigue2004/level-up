@@ -409,7 +409,7 @@ function puzzleTiles() {
   const tiles = [
     ["sudoku", "🔢", "Sudoku", "Fill the 9×9 grid"],
     ["crossword", "✏️", "Mini crossword", "4×4, every row and column is a word"],
-    ["word", "🟩", "Word guess", "Find the 5-letter word in 6 tries"],
+    ["word", "🔤", "Word guess", "Find the 5-letter word in 6 tries"],
     ["groups", "🧩", "Groups", "Sort 16 words into 4 groups"]
   ];
   return `<div class="puzzle-list">${tiles.map(([k, em, name, sub]) => {
@@ -420,7 +420,7 @@ function puzzleTiles() {
     <div class="row" style="flex-wrap:wrap">
       <select id="sdk-level" style="width:auto;flex:1">${["easy", "medium", "hard", "expert"].map(l => `<option ${(S.practiceLevel || "medium") === l ? "selected" : ""}>${l}</option>`).join("")}</select>
       <button class="btn ghost" data-act="practice" data-p="sudoku">🔢 Sudoku</button>
-      <button class="btn ghost" data-act="practice" data-p="word">🟩 Word</button>
+      <button class="btn ghost" data-act="practice" data-p="word">🔤 Word</button>
       <button class="btn ghost" data-act="practice" data-p="groups">🧩 Groups</button>
     </div>
     <label class="small muted row" style="margin-top:10px"><input type="checkbox" data-act="hardword" ${S.settings.hardWord ? "checked" : ""}> Word guess hard mode (hints you find must be used)</label>
@@ -598,7 +598,7 @@ function openSober(id) {
 }
 
 // ---------- XP + FIGHTER ----------
-const STATS = [["str", "Strength", "💪"], ["tech", "Striking", "🥊"], ["mind", "Mind", "🧠"], ["discipline", "Discipline", "🛡️"], ["spirit", "Spirit", "🌿"]];
+const STATS = [["str", "Strength", "💪", "biceps-flexed", "workouts, runs, movement."], ["tech", "Striking", "🥊", "glove", "boxing rounds and MMA lessons."], ["mind", "Mind", "🧠", "brain", "Security+, lessons, puzzles."], ["discipline", "Discipline", "🛡️", "shield", "habits, sobriety, water, job apps."], ["spirit", "Spirit", "🌿", "leaf", "mood check-ins, journaling, breathwork, time outside."]];
 const STAT_ALIAS = { cardio: "str", technique: "tech", striking: "tech" };
 const XP_RULES = { // checklist item id -> [xp, stat]
   run: [15, "str"], boxing: [15, "tech"], gym: [5, "str"], secplus: [20, "mind"], sober: [10, "discipline"],
@@ -643,24 +643,46 @@ const BELTS = [[1, "White", "#f2f2f2"], [5, "Blue", "#2f6fd6"], [10, "Purple", "
 const TITLES = [[1, "Rookie"], [3, "Amateur"], [6, "Prospect"], [10, "Contender"], [15, "Veteran"], [20, "Champion"], [30, "Legend"]];
 const pick = (arr, lv) => arr.filter(b => lv >= b[0]).pop();
 function fighterSVG(lv) {
-  const belt = pick(BELTS, lv), stripes = Math.min(4, lv - belt[0]);
-  const bulk = Math.min(1, lv / 25);
-  const sh = 34 + bulk * 10; // shoulder half-width
-  return `<svg viewBox="0 0 200 220" width="180" height="198" aria-label="Your fighter">
-    <ellipse cx="100" cy="210" rx="60" ry="7" fill="var(--line)"/>
-    <rect x="${100 - 24}" y="128" width="20" height="74" rx="9" fill="#c98e64"/>
-    <rect x="${100 + 4}" y="128" width="20" height="74" rx="9" fill="#c98e64"/>
-    <rect x="${100 - 28}" y="118" width="56" height="34" rx="8" fill="var(--accent)"/>
-    <path d="M${100 - sh} 64 Q100 54 ${100 + sh} 64 L${100 + 26} 122 L${100 - 26} 122 Z" fill="#d9a074"/>
-    <rect x="${100 - 30}" y="112" width="60" height="10" rx="3" fill="${belt[2]}" stroke="var(--ink)" stroke-width="1"/>
-    ${Array.from({ length: stripes }, (_, i) => `<rect x="${100 + 14 + i * 4}" y="112" width="2" height="10" fill="${belt[0] === 20 ? "#d33" : "#fff"}"/>`).join("")}
-    <path d="M${100 - sh} 66 L${100 - sh - 10} 92 L${100 - 22} 60" stroke="#d9a074" stroke-width="${12 + bulk * 6}" stroke-linecap="round" fill="none"/>
-    <path d="M${100 + sh} 66 L${100 + sh + 4} 96 L${100 + 16} 58" stroke="#d9a074" stroke-width="${12 + bulk * 6}" stroke-linecap="round" fill="none"/>
-    <circle cx="${100 - 22}" cy="56" r="13" fill="var(--accent)"/><circle cx="${100 + 16}" cy="52" r="13" fill="var(--accent)"/>
-    <circle cx="100" cy="36" r="20" fill="#d9a074"/>
-    <path d="M80 30 Q100 6 120 30 Q110 20 100 22 Q90 20 80 30Z" fill="#2b2118"/>
-    <circle cx="93" cy="38" r="2" fill="#2b2118"/><circle cx="107" cy="38" r="2" fill="#2b2118"/>
-    <path d="M94 46 Q100 49 106 46" stroke="#2b2118" stroke-width="2" fill="none" stroke-linecap="round"/>
+  const belt = pick(BELTS, lv);
+  const k = Math.min(1, (lv - 1) / 24); // 0 rookie -> 1 legend: more muscle
+  const sw = (n, m) => (n + k * m).toFixed(1);
+  const SK = "#c68a5e", SD = "#9f6a42", HR = "#1c1512", SH = "#1f2a44";
+  const tw = 30 + k * 7; // torso half-width at shoulders
+  return `<svg viewBox="0 0 160 220" aria-label="Your fighter">
+    <ellipse cx="80" cy="212" rx="54" ry="6" fill="var(--ink)" opacity=".12"/>
+    <path d="M90 130 L106 168 L114 204" stroke="${SD}" stroke-width="${sw(17, 5)}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M68 130 L56 168 L48 204" stroke="${SK}" stroke-width="${sw(19, 5)}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M40 206 h18 a4 4 0 0 1 0 8 h-22z" fill="${SD}"/><path d="M108 206 h16 a4 4 0 0 1 0 8 h-18z" fill="${SD}"/>
+    <path d="M${80 + tw} 64 L${80 + tw + 10} 94 L96 62" stroke="${SD}" stroke-width="${sw(13, 5)}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="96" cy="58" r="${sw(12, 2)}" fill="var(--accent)"/><circle cx="96" cy="58" r="${sw(12, 2)}" fill="#000" opacity=".22"/>
+    <path d="M${80 - tw} 62 Q80 ${52 - k * 4} ${80 + tw} 62 L${100 + k * 3} 114 L${60 - k * 3} 114 Z" fill="${SK}"/>
+    <path d="M${80 - tw * .6} 76 Q${80 - tw * .3} 84 80 80 Q${80 + tw * .3} 84 ${80 + tw * .6} 76" stroke="${SD}" stroke-width="1.6" fill="none" opacity="${.35 + k * .5}"/>
+    <path d="M80 86 V108 M72 92 h16 M73 100 h14" stroke="${SD}" stroke-width="1.4" fill="none" opacity="${.15 + k * .5}" stroke-linecap="round"/>
+    <rect x="72" y="42" width="16" height="16" rx="5" fill="${SD}"/>
+    <path d="M${58 - k * 3} 112 H${102 + k * 3} L108 148 H86 L80 136 L74 148 H52 Z" fill="${SH}"/>
+    <path d="M${58 - k * 3} 112 L52 148 H58 L${63 - k * 2} 114 Z" fill="var(--accent)"/>
+    <rect x="${56 - k * 3}" y="108" width="${48 + k * 6}" height="8" rx="2" fill="${belt[2]}" stroke="#000" stroke-opacity=".35" stroke-width="1"/>
+    <path d="M77 115 l-7 20 h6 l4-14z M83 115 l5 21 h6 l-6-21z" fill="${belt[2]}" stroke="#000" stroke-opacity=".35" stroke-width="1"/>
+    <rect x="75" y="106" width="10" height="12" rx="2" fill="${belt[2]}" stroke="#000" stroke-opacity=".4" stroke-width="1"/>
+    <path d="M${80 - tw} 64 L${80 - tw - 12} 92 L60 54" stroke="${SK}" stroke-width="${sw(14, 5)}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="80" cy="30" r="17" fill="${SK}"/>
+    <path d="M63 28 Q64 11 81 11 Q97 11 97 26 Q90 19 80 20 Q70 20 63 28Z" fill="${HR}"/>
+    <circle cx="96" cy="32" r="3.5" fill="${SD}"/>
+    <path d="M71 31 h6 M84 31 h6" stroke="${HR}" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M75 40 h10" stroke="${SD}" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="60" cy="50" r="${sw(12.5, 2)}" fill="var(--accent)"/>
+    <path d="M52 46 a9 9 0 0 1 10-6" stroke="#fff" stroke-opacity=".45" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+function beltSVG(lv) {
+  const belt = pick(BELTS, lv), next = BELTS.find(b => b[0] > lv);
+  const stripes = next ? Math.min(4, Math.floor((lv - belt[0]) / Math.max(1, (next[0] - belt[0]) / 4))) : 4;
+  const bar = belt[0] === 20 ? "#b3261e" : "#111";
+  return `<svg viewBox="0 0 300 26" preserveAspectRatio="none" style="width:100%;height:22px;display:block" aria-label="${belt[1]} belt, ${stripes} stripes">
+    <rect x="0" y="3" width="300" height="20" rx="3" fill="${belt[2]}" stroke="#000" stroke-opacity=".25"/>
+    <rect x="0" y="12" width="300" height="1.5" fill="#000" opacity=".08"/>
+    <rect x="220" y="3" width="60" height="20" fill="${bar}"/>
+    ${Array.from({ length: 4 }, (_, i) => `<rect x="${230 + i * 12}" y="3" width="6" height="20" fill="#fff" opacity="${i < stripes ? 1 : .12}"/>`).join("")}
   </svg>`;
 }
 function renderFighter() {
@@ -673,17 +695,23 @@ function renderFighter() {
   const f1 = v => v == null ? "–" : (Math.round(v * 10) / 10);
   const f0 = v => v == null ? "–" : Math.round(v);
   return `
-  <div class="card" style="text-align:center">
-    ${fighterSVG(lv)}
-    <div style="font-size:22px;font-weight:800">Level ${lv} · ${title}</div>
-    <div class="muted small">${belt[1]} belt · ${total} XP total · +${todayTotal} today</div>
-    <div class="bar protein" style="margin-top:10px;height:12px"><div style="width:${(total - a) / (b - a) * 100}%"></div></div>
-    <div class="muted small" style="margin-top:4px">${b - total} XP to level ${lv + 1}</div>
+  <div class="card fhero">
+    <div class="stage">
+      <div>
+        <div class="lvl"><small>Level</small>${lv}</div>
+        <div class="ttl">${title}</div>
+        <div class="sub">${belt[1]} belt · ${total.toLocaleString()} XP · +${todayTotal} today</div>
+      </div>
+      <div class="fig">${fighterSVG(lv)}</div>
+    </div>
+    <div class="belt-bar">${beltSVG(lv)}</div>
+    <div class="xpbar"><div class="track"><div style="width:${(total - a) / (b - a) * 100}%"></div></div>
+      <div class="row"><span>${total - a} / ${b - a} XP</span><span>${b - total} to level ${lv + 1}</span></div></div>
   </div>
   ${Object.keys(S.prs || {}).length ? `<div class="card"><h2>🏆 Lifting PRs</h2>${Object.entries(S.prs).sort((a, b) => b[1].e1rm - a[1].e1rm).map(([n, p]) => `<div class="row" style="padding:5px 0;border-top:1px solid var(--line)"><span class="grow" style="text-transform:capitalize">${esc(n)}</span><b>${p.w} × ${p.r}</b><span class="muted small">${esc(p.date.slice(5))}</span></div>`).join("")}<div class="muted small" style="margin-top:6px">Ranked by estimated one-rep max.</div></div>` : ""}
   <div class="card"><h2>Stats</h2>
-    ${STATS.map(([k, name, em]) => `<div class="macro"><div class="row"><b>${em} ${name}</b><span>${st[k]}</span></div><div class="bar"><div style="width:${st[k] / maxStat * 100}%"></div></div></div>`).join("")}
-    <div class="muted small">Strength: workouts, gym, runs. Striking: boxing and MMA lessons. Mind: Security+, lessons, puzzles. Discipline: habits, staying sober, water, job apps. Spirit: mood check-ins, journaling, breathwork, time outside.</div>
+    ${STATS.map(([k, name, em, ic, why]) => `<div class="stat-row"><span class="si" data-noicon style="background:color-mix(in srgb, var(--st-${k}) 16%, transparent);color:var(--st-${k})">${window.Icons ? Icons.icon(ic) : em}</span><span class="sn">${name}</span><span class="sv">${st[k]}</span><div class="sb"><div style="width:${st[k] / maxStat * 100}%;background:var(--st-${k})"></div></div></div>`).join("")}
+    <div class="legend-note">${STATS.map(s => `<b>${s[1]}:</b> ${s[4]}`).join(" ")}</div>
   </div>
   ${window.Features ? window.Features.fighterCamp() : ""}
   ${window.Features3 ? window.Features3.fighterExtras() : ""}

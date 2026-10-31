@@ -269,3 +269,28 @@
 
 @media (prefers-reduced-motion: reduce) { .rh *, .rh-player *, .rh-scrim * { animation-duration: .01ms !important; transition-duration: .01ms !important } .rh-confetti { display: none } }
 @media (max-width: 380px) { .rh-row2, .rh-subj-grid { grid-template-columns: 1fr } }
+
+/* ---------- wave 1: PBQ, exam, explain, depth ---------- */
+.rh-pbq { display: flex; flex-direction: column; gap: 8px; }
+.rh-pbq-row { display: grid; grid-template-columns: 1fr; gap: 6px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--card); }
+.rh-pbq-row .lbl { font-size: 15px; line-height: 1.4; }
+.rh-sel { font: inherit; font-size: 16px; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface-2, var(--card)); color: var(--ink); width: 100%; }
+.rh-sel.right { border-color: var(--ok); } .rh-sel.wrong { border-color: var(--bad); }
+.rh-pbq-fix { color: var(--ok); font-weight: 600; font-size: 13px; line-height: 1.4; }
+.rh-ta { font: inherit; font-size: 16px; line-height: 1.5; padding: 12px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); color: var(--ink); width: 100%; box-sizing: border-box; resize: vertical; }
+.rh-pt { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; font-size: 15px; line-height: 1.4; }
+.rh-pt input { width: 20px; height: 20px; flex: none; margin-top: 1px; accent-color: var(--good); }
+.rh-depthbar { display: flex; flex-wrap: wrap; gap: 8px; }
+.rh-chipbtn { font: inherit; font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+.rh-deeper { border-left: 3px solid var(--hole, var(--accent)); padding-left: 12px; }
+.rh-deeper .eyebrow { display: block; margin-bottom: 4px; }
+.rh-seg { display: flex; align-items: center; gap: 4px; background: var(--surface-2, var(--card)); border-radius: 12px; padding: 4px; font-size: 13px; }
+.rh-seg span { padding: 0 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-size: 11px; }
+.rh-seg button { flex: 1; font: inherit; font-weight: 700; border: 0; background: transparent; color: var(--ink); padding: 8px 6px; border-radius: 9px; cursor: pointer; }
+.rh-seg button.on { background: var(--card); box-shadow: var(--shadow); }
+.rh-timer { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 16px; min-width: 52px; text-align: right; }
+.rh-player.exam .rh-opt.right, .rh-player.exam .rh-opt.wrong { border-color: var(--line); background: var(--card); animation: none; }
+.rh-player.exam .rh-opt.picked { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.rh-player.exam .rh-field input.right, .rh-player.exam .rh-field input.wrong { border-color: var(--accent); }
+.rh-player.exam .rh-why { background: var(--surface-2, var(--card)); }
+.rh-widget { min-height: 120px; }
