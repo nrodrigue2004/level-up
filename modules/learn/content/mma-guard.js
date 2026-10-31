@@ -218,3 +218,22 @@
     });
   }); });
 })();
+/* Second frames batch. */
+(function () {
+  var S = (window.RH_SUBJECTS || []).filter(function (s) { return s.id === 'mma'; })[0]; if (!S) return;
+  var FR = {
+    'mg-subs': [['guillotine', 'Guillotine, frame by frame'], ['kimura', 'Kimura, frame by frame']],
+    'mma-posmap-mount': [['elbowknee', 'If you\'re the one mounted: elbow-knee escape'], ['upa', 'If you\'re the one mounted: upa (bridge and roll)']],
+    'mma-ranges': [['double', 'Double-leg takedown, frame by frame']],
+    'mma-combos': [['onetwothree', 'Jab-cross-hook, frame by frame']],
+    'mma-position-first': [['rnc', 'Back control finish: rear-naked choke']]
+  };
+  S.units.forEach(function (u) { u.lessons.forEach(function (l) {
+    var list = FR[l.id]; if (!list) return;
+    var at = 0; l.cards.forEach(function (c, i) { if (c.t === 'read' || c.t === 'art' || (c.t === 'widget' && c.w === 'frames')) at = i + 1; });
+    list.slice().reverse().forEach(function (f) {
+      if (l.cards.some(function (c) { return c.t === 'widget' && c.o && c.o.seq === f[0]; })) return;
+      l.cards.splice(at, 0, { t: 'widget', w: 'frames', o: { seq: f[0] }, h: f[1], fallback: '<p>Step through this technique in the app. Then drill it slowly with a partner and a coach.</p>' });
+    });
+  }); });
+})();

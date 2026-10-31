@@ -63,7 +63,7 @@
 
   window.RH_SUBJECTS = window.RH_SUBJECTS || [];
   window.RH_SUBJECTS.push({
-    id: 'spanish', name: 'Spanish', mark: '🗣️', color: '#e06c5a', stat: 'mind', group: 'Languages',
+    id: 'spanish', name: 'Spanish', mark: '🗣️', color: '#e06c5a', stat: 'mind', group: 'Languages', speakLang: 'es-ES',
     blurb: 'A1 to B1: talk, read, get around.',
     intro: 'Spanish from zero to solid conversation (CEFR A1 → B1), Latin American style. Grammar is explained in plain English, then drilled with fresh conjugations every time. Turn on audio in Learn settings to hear the words, and say every example out loud. Pair this with 10 minutes a day of listening (a podcast like Coffee Break Spanish or Dreaming Spanish, both free) and you\'ll be holding real conversations within months.',
     placement: [

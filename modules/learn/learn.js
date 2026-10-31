@@ -12,7 +12,7 @@
   (function css() {
     var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = BASE + 'learn.css'; document.head.appendChild(l);
   })();
-  var CONTENT = ['content/glossary.js', 'content/secplus.js', 'content/secplus-d1.js', 'content/secplus-d2.js', 'content/secplus-d3.js', 'content/secplus-d4.js', 'content/secplus-d5.js', 'content/secplus-labs.js', 'content/fe.js', 'content/projects.js', 'content/cs.js', 'content/cs-reboot.js', 'content/cs-langs.js', 'content/cs-degree.js', 'content/cs-degree2.js', 'content/tech.js', 'content/ai.js', 'content/career.js', 'content/mma.js', 'content/mma-guard.js', 'content/world.js', 'content/k12-math.js', 'content/k12-english.js', 'content/k12-science.js', 'content/k12-history.js', 'content/life.js', 'content/music.js', 'content/dance.js', 'content/spanish.js'];
+  var CONTENT = ['content/glossary.js', 'content/secplus.js', 'content/secplus-d1.js', 'content/secplus-d2.js', 'content/secplus-d3.js', 'content/secplus-d4.js', 'content/secplus-d5.js', 'content/secplus-labs.js', 'content/fe.js', 'content/projects.js', 'content/cs.js', 'content/cs-reboot.js', 'content/cs-langs.js', 'content/cs-degree.js', 'content/cs-degree2.js', 'content/tech.js', 'content/ai.js', 'content/career.js', 'content/mma.js', 'content/mma-guard.js', 'content/world.js', 'content/k12-math.js', 'content/k12-english.js', 'content/k12-science.js', 'content/k12-history.js', 'content/life.js', 'content/music.js', 'content/dance.js', 'content/spanish.js', 'content/mind.js'];
 
   function loadScript(src) {
     return new Promise(function (res) {
@@ -551,6 +551,18 @@
     clone.querySelectorAll('button.rh-btn, button.rh-link, .rh-seg2, .rh-opts, .rh-tf, .rh-match, .rh-slots, .rh-pool, .rh-bits, .rh-readout, .rh-term, .rh-lab, .rh-bars, .rh-pm-paths, .rh-email, .rh-kind, svg, input, form, pre').forEach(function (x) { x.remove(); });
     var text = (clone.textContent || '').replace(/\s+/g, ' ').trim();
     if (!text) return;
+    var sl = P && P.subj && P.subj.speakLang;
+    if (sl) {
+      // language lessons: bold/italic words are target-language, read with that voice; the rest in the default voice
+      var parts = [], walk = function (n, foreign) {
+        if (n.nodeType === 3) { var t = n.textContent.replace(/\s+/g, ' '); if (t.trim()) { var last = parts[parts.length - 1]; if (last && last.f === foreign) last.t += t; else parts.push({ t: t, f: foreign }); } return; }
+        if (n.nodeType !== 1) return; var f = foreign || /^(B|I|EM|STRONG)$/.test(n.tagName);
+        for (var c = n.firstChild; c; c = c.nextSibling) walk(c, f);
+      };
+      walk(clone, false);
+      try { parts.forEach(function (p) { var u = new SpeechSynthesisUtterance(p.t.trim()); if (p.f) { u.lang = sl; u.rate = 0.9; } window.speechSynthesis.speak(u); }); } catch (e) { }
+      return;
+    }
     try { var u = new SpeechSynthesisUtterance(text); u.rate = 1; u.pitch = 1; window.speechSynthesis.speak(u); } catch (e) { }
   }
 
