@@ -198,3 +198,23 @@
     l.cards.splice(1, 0, { t: 'art', pose: a[0], o: { you: a[1] }, h: 'See it', cap: a[2], fallback: '<p>' + a[2] + '</p>' });
   }); });
 })();
+/* Step-by-step technique frames (shell's frames widget). */
+(function () {
+  var S = (window.RH_SUBJECTS || []).filter(function (s) { return s.id === 'mma'; })[0]; if (!S) return;
+  var FR = {
+    'mma-hipbump': [['hipbump', 'Hip-bump sweep → kimura, frame by frame']],
+    'mma-triangle': [['triangle', 'Triangle, frame by frame']],
+    'mg-sweeps': [['scissor', 'Scissor sweep, frame by frame'], ['hipbump', 'Hip-bump sweep → kimura, frame by frame']],
+    'mg-subs': [['armbar', 'Armbar from guard, frame by frame']],
+    'mg-mma': [['standup', 'Technical stand-up, frame by frame']],
+    'mg-top': [['kneecut', 'Knee-cut pass, frame by frame']]
+  };
+  S.units.forEach(function (u) { u.lessons.forEach(function (l) {
+    var list = FR[l.id]; if (!list) return;
+    var at = 0; l.cards.forEach(function (c, i) { if (c.t === 'read' || c.t === 'art') at = i + 1; });
+    list.slice().reverse().forEach(function (f) {
+      if (l.cards.some(function (c) { return c.t === 'widget' && c.o && c.o.seq === f[0]; })) return;
+      l.cards.splice(at, 0, { t: 'widget', w: 'frames', o: { seq: f[0] }, h: f[1], fallback: '<p>Step through this technique in the app to see each frame. Then drill it slowly with a partner and a coach.</p>' });
+    });
+  }); });
+})();

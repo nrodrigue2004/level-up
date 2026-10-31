@@ -80,6 +80,48 @@
       { base: "guard", A: { h: [100, 56], s: [102, 66], p: [116, 86], k: [92, 100], a: [120, 108], w: [104, 92] }, B: { k: [108, 90], a: [120, 104], K: [104, 92], X: [116, 106] }, arrows: [[110, 106, 86, 100, 0]], cap: "Slide your knee across his thigh, toward the mat on the far side." },
       { base: "guard", A: { h: [78, 80], s: [86, 84], p: [108, 88], e: [70, 94], w: [60, 100], E: [98, 92], W: [104, 98], k: [90, 104], a: [118, 108], K: [112, 104], X: [126, 108] }, B: { k: [114, 92], a: [130, 104], K: [110, 96], X: [128, 106] }, order: "BA", cap: "Crossface and get the underhook as you cut through." },
       { base: "side", cap: "Free your leg and settle into side control. Hips low." }
+    ] },
+    guillotine: { name: "Guillotine from guard", who: "B", frames: [
+      { base: "guard", A: { h: [84, 70], s: [92, 72], p: [118, 86], e: [86, 86], w: [80, 100], E: [90, 84], W: [84, 102] }, B: { s: [66, 88], h: [58, 78], k: [108, 92], a: [120, 104], K: [104, 96], X: [116, 106] }, cap: "His head drops low (shooting in or leaning forward)." },
+      { base: "guard", A: { h: [84, 74], s: [92, 74], p: [118, 86], e: [86, 88], w: [80, 100], E: [90, 86], W: [84, 102] }, B: { s: [66, 88], h: [58, 78], e: [80, 66], w: [90, 80], E: [74, 80], W: [88, 84], k: [108, 92], a: [120, 104], K: [104, 96], X: [116, 106] }, cap: "Wrap your arm around his neck, wrist blade under his chin. Grab your wrist with the other hand." },
+      { base: "guard", A: { h: [74, 90], s: [86, 84], p: [118, 86], e: [80, 96], w: [72, 104] }, B: { e: [66, 86], w: [80, 86], E: [64, 92], W: [80, 90] }, arrows: [[96, 80, 120, 80, 0]], cap: "Close your guard and lie back, pulling his head down with you." },
+      { base: "guard", A: { h: [74, 90], s: [86, 84], p: [118, 86], e: [80, 96], w: [72, 104] }, B: { p: [90, 96], e: [66, 84], w: [80, 82], E: [64, 90], W: [80, 86] }, arrows: [[82, 92, 78, 70, 0]], cap: "Push his body away with your legs and pull your forearm up into his throat. Tap early in training." }
+    ] },
+    kimura: { name: "Kimura from guard", who: "B", frames: [
+      { base: "guard", A: { e: [100, 86], w: [96, 104] }, cap: "He posts a hand on the mat to keep his balance." },
+      { base: "guard", A: { e: [100, 86], w: [96, 104] }, B: { s: [72, 82], h: [64, 72], p: [88, 104], e: [86, 96], w: [96, 102], E: [94, 66], W: [106, 84] }, cap: "Sit up. Grab his wrist, reach over his shoulder, and lock your own wrist (figure-four)." },
+      { base: "guard", A: { e: [112, 82], w: [126, 72] }, B: { e: [104, 74], w: [122, 72], E: [96, 70], W: [116, 76] }, arrows: [[100, 98, 126, 70, -16]], cap: "Fall back, close your guard, and rotate his hand up behind his back. Slow. Tap early in training." }
+    ] },
+    elbowknee: { name: "Elbow-knee mount escape", who: "B", frames: [
+      { base: "mount", order: "AB", B: { e: [72, 94], w: [84, 90], E: [74, 96], W: [88, 94] }, cap: "Elbows tight to your sides, hands framing on his hips. Never push his chest with straight arms." },
+      { base: "mount", B: { p: [110, 100], e: [72, 94], w: [86, 92], k: [114, 88], a: [104, 104] }, arrows: [[104, 106, 124, 104, 0]], cap: "Turn onto your side and shrimp your hips away from his knee." },
+      { base: "mount", B: { p: [112, 100], e: [84, 96], w: [92, 92], k: [92, 92], a: [112, 104] }, arrows: [[110, 92, 92, 92, 0]], cap: "Slide your knee in to meet your elbow, under his knee." },
+      { base: "halfguard", cap: "Trap his leg. You're back to half guard." }
+    ] },
+    upa: { name: "Upa (bridge and roll)", who: "B", frames: [
+      { base: "mount", order: "AB", B: { e: [76, 90], w: [80, 76], E: [80, 92], W: [84, 78], k: [100, 86], a: [112, 106], K: [98, 88], X: [110, 107] }, A: { e: [80, 66], w: [80, 82] }, cap: "Trap his arm against your chest and step your foot outside his foot on the same side." },
+      { base: "mount", B: { p: [102, 86], e: [76, 88], w: [80, 76], E: [80, 90], W: [84, 78], k: [100, 84], a: [112, 106], K: [98, 86], X: [110, 107] }, A: { h: [74, 48], s: [80, 58], p: [96, 74], e: [80, 66], w: [80, 80], k: [82, 92], a: [104, 96], K: [86, 94], X: [108, 94] }, arrows: [[104, 106, 104, 84, 0]], cap: "Bridge hard, straight up onto your shoulder." },
+      { base: "mount", B: { h: [60, 90], s: [72, 88], p: [102, 84], k: [104, 82], a: [116, 104] }, A: { h: [52, 96], s: [62, 88], p: [86, 70], e: [56, 100], w: [50, 104], k: [100, 62], a: [116, 66], K: [96, 66], X: [112, 70] }, arrows: [[100, 60, 46, 86, -14]], cap: "Turn over the trapped side. He can't post, so he rolls." },
+      { base: "guard", flip: true, cap: "You land on top in his guard. Posture up." }
+    ] },
+    rnc: { name: "Rear-naked choke", who: "A", frames: [
+      { base: "back", cap: "Hooks in, chest to his back. Seat belt grip: one arm over the shoulder, one under." },
+      { base: "back", A: { e: [84, 62], w: [100, 60] }, cap: "Slide the choking arm under his chin. Elbow lined up with his chin." },
+      { base: "back", A: { e: [84, 62], w: [100, 60], E: [82, 46], W: [80, 40] }, cap: "Grab your own bicep. Put the other hand behind his head." },
+      { base: "back", A: { h: [74, 48], s: [76, 58], e: [86, 62], w: [100, 58], E: [82, 46], W: [82, 40] }, arrows: [[66, 56, 76, 50, 0]], cap: "Elbows together, chest forward, squeeze. Tap early in training." }
+    ] },
+    double: { name: "Double-leg takedown", who: "A", frames: [
+      { base: "standing", cap: "Stance. Watch his hips, not his hands." },
+      { base: "standing", A: { h: [72, 52], s: [72, 62], p: [64, 86], e: [82, 70], w: [90, 64], E: [80, 72], W: [88, 66], k: [76, 98], a: [82, 108], K: [54, 98], X: [46, 108] }, arrows: [[62, 40, 66, 54, 0]], cap: "Level change: bend your knees, not your waist. Back straight." },
+      { base: "standing", A: { h: [108, 66], s: [100, 70], p: [80, 82], e: [116, 80], w: [128, 86], E: [114, 78], W: [126, 82], k: [104, 106], a: [84, 108], K: [66, 96], X: [56, 108] }, arrows: [[70, 92, 102, 104, 0]], cap: "Penetration step: lead knee drops between his feet, arms wrap behind his thighs." },
+      { base: "standing", A: { h: [118, 64], s: [110, 70], p: [88, 84], e: [124, 82], w: [134, 88], E: [122, 80], W: [132, 84], k: [108, 106], a: [92, 108], K: [96, 100], X: [80, 108] }, B: { h: [164, 46], s: [156, 54], p: [142, 80], e: [148, 64], w: [140, 70], E: [150, 62], W: [144, 66], k: [146, 96], a: [140, 108], K: [156, 96], X: [162, 108] }, arrows: [[120, 56, 150, 74, 12]], cap: "Head up, drive through and turn the corner." },
+      { base: "guard", cap: "He lands on his back. You're in his guard. Posture up." }
+    ] },
+    onetwothree: { name: "Jab-cross-hook (1-2-3)", who: "A", frames: [
+      { base: "standing", cap: "Stance. Hands up, chin down, weight in the middle." },
+      { base: "standing", A: { e: [80, 40], w: [98, 38] }, arrows: [[76, 46, 100, 46, 0]], cap: "1, jab: lead hand straight out and snap it back to your face." },
+      { base: "standing", A: { s: [64, 41], p: [60, 70], e: [72, 50], w: [76, 36], E: [82, 40], W: [102, 38], K: [54, 90], X: [50, 105] }, arrows: [[68, 56, 104, 44, 0]], cap: "2, cross: rear hand straight. Turn your back hip and lift the back heel." },
+      { base: "standing", A: { s: [62, 41], p: [58, 70], e: [76, 40], w: [88, 32], E: [70, 48], W: [80, 38], k: [70, 88], a: [74, 108] }, arrows: [[70, 50, 92, 34, -12]], cap: "3, hook: pivot the lead foot, elbow at shoulder height, turn through with the hips. Hands back up." }
     ] }
   };
   function frame(id, i, opts = {}) {
