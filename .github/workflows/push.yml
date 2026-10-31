@@ -1,0 +1,23 @@
+name: Push reminders
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Send a test notification now"
+        type: boolean
+        default: true
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm install --no-save web-push@3.6.7
+      - run: node push/send.js
+        env:
+          PUSH_CONFIG: ${{ secrets.PUSH_CONFIG }}
+          TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.test }}

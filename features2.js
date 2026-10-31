@@ -146,8 +146,36 @@ function settingsHTML() {
     <p class="muted small">These become repeating alerts in your iPhone Calendar, so they buzz even when the app is closed. Edit the times, then tap Add to Calendar and choose "Add All". To change them later, delete the "Level Up" events in Calendar and add again.</p>
     ${reminders().map((r, i) => `<div class="rem"><label class="tg"><input type="checkbox" data-rem-on="${i}" ${r.on ? "checked" : ""}><span></span></label>
       <div class="grow"><input type="text" data-rem-title="${i}" value="${esc(r.title)}">${r.until ? `<div class="muted small" style="margin-top:4px">Every hour from the start time until <input type="time" data-rem-until="${i}" value="${r.until}" style="width:110px;display:inline-block;padding:4px 6px"></div>` : ""}</div><input type="time" data-rem-time="${i}" value="${r.time}"><button class="x" data-rem-del="${i}">✕</button></div>`).join("")}
-    <div class="row" style="margin-top:8px"><button class="btn ghost grow" data-rem-add>+ Add reminder</button><button class="btn grow" data-rem-ics>Add to Calendar</button></div>`;
+    <div class="row" style="margin-top:8px"><button class="btn ghost grow" data-rem-add>+ Add reminder</button><button class="btn grow" data-rem-ics>Add to Calendar</button></div>
+    <h2 style="margin-top:20px">Push notifications</h2>
+    <p class="muted small">Real notifications from Level Up itself, sent for free by a scheduled GitHub Action on your repo. They use the same reminder list above and arrive within about 15 minutes of the time. Needs the app added to your Home Screen (iOS 16.4+).</p>
+    ${pushHTML()}`;
 }
+// ================= PUSH (free: VAPID keys made on the phone, sent by a GitHub Actions cron) =================
+const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const unb64u = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
+const SECRET_URL = "https://github.com/nrodrigue2004/level-up/settings/secrets/actions/new";
+function pushConfig() {
+  const p = S().push; if (!p || !p.sub) return "";
+  return JSON.stringify({ sub: p.sub, pub: p.pub, priv: p.priv, tz: Intl.DateTimeFormat().resolvedOptions().timeZone, rem: reminders().filter(r => r.on).map(r => ({ t: r.time, u: r.until || undefined, title: r.title, body: r.note || "" })) });
+}
+function pushHTML() {
+  const p = S().push;
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return `<p class="small muted">This browser can't receive push. On iPhone, open Level Up from the Home Screen icon, not Safari.</p>`;
+  if (!p || !p.sub) return `<button class="btn block" data-push-on>Turn on push notifications</button>`;
+  return `<ol class="small" style="padding-left:18px;line-height:1.5"><li>Tap <b>Copy setup code</b>.</li><li>Open <a href="${SECRET_URL}" target="_blank" rel="noopener">your repo's new secret page</a>, name it <b>PUSH_CONFIG</b>, paste, and save. (If it already exists, edit it instead.)</li><li>Tap <b>Send test</b> on GitHub: Actions → Push reminders → Run workflow.</li></ol>
+    <div class="row"><button class="btn grow" data-push-copy>Copy setup code</button><button class="btn ghost grow" data-push-off>Turn off</button></div>
+    <p class="small muted" style="margin-top:6px">Changed a reminder above? Copy the code again and update the secret.</p>`;
+}
+async function pushOn() {
+  if ((await Notification.requestPermission()) !== "granted") { I.toast && I.toast("Notifications are blocked in Settings"); return; }
+  const kp = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign"]);
+  const pub = b64u(await crypto.subtle.exportKey("raw", kp.publicKey)); const priv = (await crypto.subtle.exportKey("jwk", kp.privateKey)).d;
+  const reg = await navigator.serviceWorker.ready; const old = await reg.pushManager.getSubscription(); if (old) await old.unsubscribe();
+  const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: unb64u(pub) });
+  S().push = { sub: sub.toJSON(), pub, priv }; I.save();
+}
+async function pushOff() { try { const reg = await navigator.serviceWorker.ready; const s = await reg.pushManager.getSubscription(); if (s) await s.unsubscribe(); } catch (e) {} delete S().push; I.save(); }
 function mountSettings(host) {
   const draw = () => { host.innerHTML = settingsHTML(); };
   host.onclick = e => {
@@ -155,6 +183,9 @@ function mountSettings(host) {
     const del = e.target.closest("[data-rem-del]"); if (del) { reminders().splice(+del.dataset.remDel, 1); I.save(); draw(); return; }
     if (e.target.closest("[data-rem-add]")) { reminders().push({ id: "r" + Date.now().toString(36), on: true, time: "12:00", title: "⏰ Reminder", note: "" }); I.save(); draw(); return; }
     if (e.target.closest("[data-rem-ics]")) exportICS();
+    if (e.target.closest("[data-push-on]")) pushOn().then(draw).catch(err => { I.toast && I.toast("Push failed: " + err.message); });
+    if (e.target.closest("[data-push-off]")) pushOff().then(draw);
+    if (e.target.closest("[data-push-copy]")) navigator.clipboard.writeText(pushConfig()).then(() => I.toast && I.toast("Copied. Paste it as PUSH_CONFIG.")).catch(() => prompt("Copy this:", pushConfig()));
   };
   host.oninput = e => {
     const t = e.target, d = t.dataset;

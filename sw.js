@@ -11,3 +11,11 @@ self.addEventListener("fetch", e => {
     return hit || net;
   }));
 });
+self.addEventListener("push", e => {
+  let d = {}; try { d = e.data.json(); } catch (x) { d = { title: "Level Up", body: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.registration.showNotification(d.title || "Level Up", { body: d.body || "", icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: d.tag, data: { url: d.url || "./" } }));
+});
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(cs => { const c = cs[0]; if (c) return c.focus(); return self.clients.openWindow(e.notification.data && e.notification.data.url || "./"); }));
+});
