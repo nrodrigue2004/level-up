@@ -128,3 +128,29 @@ details.section summary .count { font-family: var(--display); font-size: 15px; l
 :root[data-theme="hacker"] body, :root[data-theme="hacker"] h1, :root[data-theme="hacker"] h2, :root[data-theme="hacker"] .btn,
 :root[data-theme="hacker"] nav.tabs button, :root[data-theme="hacker"] .subtabs button { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
 .subtabs { top: var(--hdr, calc(74px + env(safe-area-inset-top))); }
+.xw { border-color: var(--ink); }
+.xw div { background: var(--card-2); }
+.xw .blk { background: #050506; border-color: #050506; }
+:root[data-theme="light"] .xw .blk { background: #131416; }
+@media (prefers-color-scheme: light) { :root:not([data-theme]) .xw .blk { background: #131416; } }
+.xw div { font-family: var(--display); font-weight: 700; }
+.gp button { font-family: var(--display); font-size: 15px; letter-spacing: .02em; }
+/* position map */
+.pm-who { margin-bottom: 8px; }
+.pm-who button { font-size: 13px; padding: 8px 6px; }
+.pm-who button.on { background: var(--accent); color: var(--accent-ink); }
+.pm-board { width: 100%; max-width: 420px; display: block; margin: 0 auto; }
+.pm-kind { font-family: var(--display); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; font-size: 13px; color: var(--k); margin: 12px 0 6px; }
+.pm-move { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; border: 1px solid var(--line); border-left: 3px solid var(--k); background: var(--card-2); border-radius: 8px; padding: 10px 12px; margin: 6px 0; font-weight: 600; }
+.pm-move small { color: var(--muted); font-weight: 500; white-space: nowrap; }
+.pm-trail { margin: 8px 2px 20px; }
+/* arena */
+.arena-hud { display: flex; gap: 14px; font-family: var(--display); font-size: 22px; font-variant-numeric: tabular-nums; }
+.arena-q { font-size: 20px; font-weight: 650; line-height: 1.35; margin: 8px 0 16px; }
+.arena-q pre { font-size: 13px; background: var(--card-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; overflow-x: auto; }
+.arena-choices { display: grid; gap: 8px; }
+.arena-choices button { text-align: left; border: 1px solid var(--line-2); background: var(--card); border-radius: 10px; padding: 14px; font-size: 16px; font-weight: 550; }
+.arena-choices button.right { background: var(--good-soft); border-color: var(--good); }
+.arena-choices button.wrong { background: var(--accent-soft); border-color: var(--accent); }
+.arena-choices button.dim { opacity: .5; }
+.arena-why { margin-top: 12px; padding: 12px; background: var(--card-2); border-radius: 10px; border: 1px solid var(--line); }

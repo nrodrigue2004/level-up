@@ -12,7 +12,7 @@
   (function css() {
     var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = BASE + 'learn.css'; document.head.appendChild(l);
   })();
-  var CONTENT = ['content/glossary.js', 'content/secplus.js', 'content/secplus-d1.js', 'content/secplus-d2.js', 'content/secplus-d3.js', 'content/secplus-d4.js', 'content/secplus-d5.js', 'content/secplus-labs.js', 'content/cs.js', 'content/tech.js', 'content/ai.js', 'content/career.js', 'content/mma.js', 'content/world.js', 'content/k12-math.js', 'content/k12-english.js', 'content/k12-science.js', 'content/k12-history.js', 'content/life.js'];
+  var CONTENT = ['content/glossary.js', 'content/secplus.js', 'content/secplus-d1.js', 'content/secplus-d2.js', 'content/secplus-d3.js', 'content/secplus-d4.js', 'content/secplus-d5.js', 'content/secplus-labs.js', 'content/cs.js', 'content/cs-reboot.js', 'content/cs-langs.js', 'content/tech.js', 'content/ai.js', 'content/career.js', 'content/mma.js', 'content/mma-guard.js', 'content/world.js', 'content/k12-math.js', 'content/k12-english.js', 'content/k12-science.js', 'content/k12-history.js', 'content/life.js'];
 
   function loadScript(src) {
     return new Promise(function (res) {
@@ -259,7 +259,7 @@
   function subjCardHTML(s) {
     var p = subjProgress(s);
     return '<button class="rh-subj" data-subject="' + s.id + '">' +
-      '<span class="dot" style="background:' + s.color + '">' + esc(s.mark) + '</span>' +
+      '<span class="dot" style="--sc:' + s.color + '">' + esc(s.mark) + '</span>' +
       '<b>' + esc(s.name) + '</b><small>' + esc(s.blurb) + '</small>' +
       '<div class="rh-bar"><i style="width:' + (p.pct * 100) + '%;background:' + s.color + '"></i></div>' +
       '<small>' + p.done + ' of ' + p.total + ' lessons</small></button>';
@@ -268,7 +268,7 @@
   function viewHome(host) {
     var d = data(), nxt = nextLesson(), due = dueReviews().length, lv = A.level();
     var head = h('div', { class: 'rh-head' });
-    head.innerHTML = '<h1>Learn</h1><p>Pick anything. No locks, no order. Follow a 🐇 as deep as you like.</p>' +
+    head.innerHTML = '<p>Pick anything. No locks, no order. Follow a rabbit hole as deep as you like.</p>' +
       '<div class="rh-xprow"><span class="rh-pill">Level ' + lv + '</span><span class="rh-pill">' + A.total() + ' XP</span>' +
       '<span class="rh-pill">' + Object.keys(d.done).length + ' lessons done</span></div>';
     host.appendChild(head);
@@ -320,7 +320,7 @@
     var s = SUBJECTS.filter(function (x) { return x.id === id; })[0], d = data(), p = subjProgress(s);
     host.appendChild(h('button', { class: 'rh-back', 'data-home': '1' }, ICON.back + ' All subjects'));
     var head = h('div', { class: 'rh-shead' });
-    head.innerHTML = '<span class="dot" style="background:' + s.color + '">' + esc(s.mark) + '</span><div><h1>' + esc(s.name) + '</h1><p>' + esc(s.blurb) + ' · ' + p.done + '/' + p.total + ' done</p></div>';
+    head.innerHTML = '<span class="dot" style="--sc:' + s.color + '">' + esc(s.mark) + '</span><div><h1>' + esc(s.name) + '</h1><p>' + esc(s.blurb) + ' · ' + p.done + '/' + p.total + ' done</p></div>';
     host.appendChild(head);
     if (s.intro) host.appendChild(h('p', { class: 'muted', style: 'margin:0;font-size:15px;line-height:1.5' }, s.intro));
     if (s.placement && !d.placement[s.id]) {
@@ -434,6 +434,49 @@
     STACK.length = 0;
     P = { mode: 'quiz', subjId: subjId, id: null, title: (sj ? sj.name : 'Quiz') + ' quiz', subj: sj || null, cards: pool, i: 0, right: 0, graded: 0, xp: 0, combo: 0, best: 0, t0: Date.now(), onDone: onDone };
     openPlayer();
+  }
+
+  /* Plain one-tap questions for other tabs (Play > Arena). Only mcq/tf, plus generated problems
+     (calc ones become 4-choice). Fresh-first via pickFresh. ids are "<lesson>#<card>" plus "~n" for generated ones. */
+  function numChoices(a) {
+    a = +a; var dec = Math.round(a) === a ? 0 : (String(a).split('.')[1] || '').length, step = Math.max(1, Math.round(Math.abs(a) * 0.1)), set = {}, out = [];
+    function fmt(x) { return dec ? (+x.toFixed(Math.min(dec, 4))).toString() : String(Math.round(x)); }
+    set[fmt(a)] = 1; out.push(fmt(a));
+    shuffle([a + step, a - step, a + 2 * step, a * 2, a / 2, a + 1, a - 1, a * 10]).forEach(function (x) { var f = fmt(x); if (out.length < 4 && !set[f] && !(a >= 0 && x < 0)) { set[f] = 1; out.push(f); } });
+    return out;
+  }
+  function plainQ(item, n) {
+    var c = item.c, L = LESSONS[item.k.split('#')[0]], tag = (/acronym/i.test(c.g || '') || (L && L.l.id === 'sp-acronyms')) ? 'acronym' : (L ? L.u.name : '');
+    if (c.t === 'gen') { var f = (window.RH_GEN || {})[c.g]; try { c = f ? f(c.o || {}) : null; } catch (e) { c = null; } if (!c) return null; }
+    var base = { id: item.k + (item.c.t === 'gen' ? '~' + n : ''), subj: L ? L.s.id : '', tag: tag, lesson: L ? L.l.title : '', explain: c.why || '' };
+    if (c.t === 'mcq') { var ord = c.keep ? c.opts.map(function (_, i) { return i; }) : shuffle(c.opts.map(function (_, i) { return i; })); base.q = c.q; base.choices = ord.map(function (i) { return c.opts[i]; }); base.answer = ord.indexOf(c.a); return base; }
+    if (c.t === 'tf') { base.q = c.q; base.choices = ['True', 'False']; base.answer = c.a ? 0 : 1; return base; }
+    if (c.t === 'calc') { var ch = numChoices(c.a), o2 = shuffle(ch); base.q = c.q; base.choices = o2; base.answer = o2.indexOf(ch[0]); return base; }
+    return null;
+  }
+  function questions(opts) {
+    opts = opts || {}; var subj = opts.subj || 'all', n = opts.n || 10, tags = (opts.tags || []).map(function (t) { return String(t).toLowerCase(); }), ex = {}, pool = [];
+    (opts.exclude || []).forEach(function (id) { ex[String(id).split('~')[0]] = 1; });
+    Object.keys(LESSONS).forEach(function (id) {
+      var L = LESSONS[id]; if (subj !== 'all' && L.s.id !== subj) return;
+      L.l.cards.forEach(function (c, i) {
+        var k = id + '#' + i; if (ex[k] && c.t !== 'gen') return;
+        if (c.t !== 'mcq' && c.t !== 'tf' && c.t !== 'gen') return;
+        if (tags.length) { var hay = [L.u.name, L.l.id, L.l.title, c.g || '', /acronym/i.test(c.g || '') || id === 'sp-acronyms' ? 'acronym' : ''].join(' ').toLowerCase(); if (!tags.some(function (t) { return hay.indexOf(t) >= 0; })) return; }
+        pool.push({ c: c, k: k });
+      });
+    });
+    var gens = pool.filter(function (x) { return x.c.t === 'gen'; }), chosen = pickFresh(pool, n), out = [], tries = 0;
+    // pad with fresh generated problems when the static pool is small (generators never run dry)
+    while (chosen.length < n && gens.length) chosen.push(gens[Math.floor(Math.random() * gens.length)]);
+    chosen.forEach(function (it) { var q = null; while (!q && tries++ < n * 4) q = plainQ(it, out.length + '' + Date.now() % 1e5); if (q) out.push(q); });
+    return out;
+  }
+  function recordAnswer(id, correct) {
+    var k = String(id).split('~')[0]; if (!cardByKey(k)) return false;
+    var d = data(), had = d.review.some(function (x) { return x.k === k; });
+    if (!correct) reviewMiss(k); else if (had) reviewHit(k);
+    A.save(); return true;
   }
 
   /* Drill: a clearly-labeled practice mode. Every item is freshly generated, so it never repeats exactly. */
@@ -1089,6 +1132,9 @@
       // let the shell add a Today-screen shortcut and read the review badge
       window.App.learn = {
         exam: function (subj) { A.go('learn'); startExam(subj || 'secplus'); },
+        questions: function (o) { try { return questions(o); } catch (e) { return []; } },
+        recordAnswer: function (id, ok) { try { return recordAnswer(id, !!ok); } catch (e) { return false; } },
+        subjects: function () { return SUBJECTS.map(function (s) { return { id: s.id, title: s.name, color: s.color, group: s.group || '' }; }); },
         randomRabbitHole: function () { A.go('learn'); var d = data(), pool = Object.keys(LESSONS).filter(function (id) { return !d.done[id]; }); var all = pool.length ? pool : Object.keys(LESSONS); if (all.length) startLesson(all[Math.floor(Math.random() * all.length)]); },
         openSubject: function (id) { A.go('learn'); if (SUBJECTS.filter(function (s) { return s.id === id; })[0]) { LV.view = 'subject'; LV.subj = id; rerender(); } },
         dueReviewCount: function () { try { return dueReviews().length; } catch (e) { return 0; } },

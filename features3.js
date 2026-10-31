@@ -177,6 +177,10 @@ function techCard() {
   if (!L || !L.techniqueOfWeek) return "";
   try { const t = L.techniqueOfWeek(); if (!t) return ""; return `<div class="card"><h2>🥋 Technique of the week</h2><b>${esc(t.title)}</b>${t.summary ? `<div class="small muted">${esc(t.summary)}</div>` : ""}<button class="btn ghost small" style="margin-top:8px" data-f3="tech">Study it</button></div>`; } catch { return ""; }
 }
+function mapCard() {
+  if (!A.mmaMap) return "";
+  return `<div class="card"><h2>🗺️ Position map</h2><div class="row"><div class="grow small muted">Every move is a path: guard → sweep → mount → back. Pick a side and follow the chain.</div><button class="btn small" data-f3="map">Open</button></div></div>`;
+}
 function studyCard() {
   const L = A.learn; if (!L || typeof L.fightStudy !== "function") return "";
   try { const t = L.fightStudy(); if (!t) return ""; return `<div class="card"><h2>🎥 Fight study</h2><b>${esc(t.title || "")}</b>${t.summary ? `<div class="small muted">${esc(t.summary)}</div>` : ""}${typeof t.open === "function" ? `<button class="btn ghost small" style="margin-top:8px" data-f3="study">Break it down</button>` : ""}</div>`; } catch { return ""; }
@@ -187,7 +191,7 @@ window.Features3 = {
     const f = finisherFor(I.cur);
     return `<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn ghost small grow" data-f3="warmup">🔥 Warm-up 5 min</button><button class="btn ghost small grow" data-f3="finisher">⚡ Finisher: ${esc(f.name)}</button></div>`;
   },
-  fighterExtras() { return techCard() + studyCard() + bodyCard(); },
+  fighterExtras() { return mapCard() + techCard() + studyCard() + bodyCard(); },
   _test: { recoveryAdvice }
 };
 document.addEventListener("click", e => {
@@ -202,6 +206,7 @@ document.addEventListener("click", e => {
   if (f === "snack") startSnack();
   if (f === "body") openBody();
   if (f === "tech") { try { A.learn.techniqueOfWeek().open(); } catch {} }
+  if (f === "map") { A.mmaMap.open("guard"); }
   if (f === "study") { try { A.learn.fightStudy().open(); } catch {} }
 });
 })();

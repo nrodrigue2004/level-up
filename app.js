@@ -408,7 +408,7 @@ function puzzleTiles() {
   const ps = puzzleState();
   const tiles = [
     ["sudoku", "🔢", "Sudoku", "Fill the 9×9 grid"],
-    ["crossword", "✏️", "Mini crossword", "4×4, every row and column is a word"],
+    ["crossword", "✏️", "Crossword", "5×5 weekdays · 6×6 weekends"],
     ["word", "🔤", "Word guess", "Find the 5-letter word in 6 tries"],
     ["groups", "🧩", "Groups", "Sort 16 words into 4 groups"]
   ];
@@ -416,14 +416,17 @@ function puzzleTiles() {
     const st = ps[k]; const status = st && st.solved ? "✓ Solved" : st && st.failed ? "Out of tries" : st && st.started ? "In progress" : "Not started";
     return `<button class="ptile ${st && st.solved ? "done" : ""}" data-act="openpuzzle" data-p="${k}"><span class="em">${em}</span><b>${name}</b><span class="small muted">${sub}</span><span class="st">${status}</span></button>`;
   }).join("")}</div>
+  ${window.Arena ? window.Arena.card() : ""}
   <div class="card" style="margin-top:12px"><h2>♾️ Practice <span class="right">unlimited, no XP</span></h2>
     <div class="row" style="flex-wrap:wrap">
       <select id="sdk-level" style="width:auto;flex:1">${["easy", "medium", "hard", "expert"].map(l => `<option ${(S.practiceLevel || "medium") === l ? "selected" : ""}>${l}</option>`).join("")}</select>
       <button class="btn ghost" data-act="practice" data-p="sudoku">🔢 Sudoku</button>
+      <button class="btn ghost" data-act="practice" data-p="crossword">✏️ Crossword</button>
       <button class="btn ghost" data-act="practice" data-p="word">🔤 Word</button>
       <button class="btn ghost" data-act="practice" data-p="groups">🧩 Groups</button>
     </div>
-    <label class="small muted row" style="margin-top:10px"><input type="checkbox" data-act="hardword" ${S.settings.hardWord ? "checked" : ""}> Word guess hard mode (hints you find must be used)</label>
+    <div class="small muted" style="margin-top:12px">Hard mode</div>
+    <div class="chips" style="margin-top:6px">${[["sudoku", "Sudoku: no red errors"], ["crossword", "Crossword: no check or hints"], ["word", "Word: must use hints"], ["groups", "Groups: 2 lives, no \"one away\""]].map(([k, l]) => `<button class="chip ${k === "word" ? (S.settings.hardWord ? "on" : "") : (S.settings.hard || {})[k] ? "on" : ""}" data-act="hardp" data-p="${k}">${l}</button>`).join("")}</div>
   </div>
   ${puzzleStats()}
   <p class="muted small" style="text-align:center;margin-top:16px">Daily puzzles follow a shuffled order through the whole bank, so they don't repeat for a long time. Use ‹ › to play other days.</p>`;
@@ -809,6 +812,7 @@ document.addEventListener("click", e => {
     case "sub": sub = v; if (v === "calendar") calMonth = cur.slice(0, 7); window.scrollTo(0, 0); break;
     case "practice": S.practiceLevel = ($("#sdk-level") || {}).value || S.practiceLevel; tab = "play"; puzzleView = "practice:" + el.dataset.p; window.scrollTo(0, 0); break;
     case "hardword": S.settings.hardWord = !S.settings.hardWord; break;
+    case "hardp": { const k = el.dataset.p; if (k === "word") S.settings.hardWord = !S.settings.hardWord; else { S.settings.hard = S.settings.hard || {}; S.settings.hard[k] = !S.settings.hard[k]; } break; }
     case "openpuzzle": tab = "play"; puzzleView = el.dataset.p; window.scrollTo(0, 0); break;
     case "addpreset": { const p = S.presets[+el.dataset.i]; dd().food.push({ name: p[0], cal: p[1], pro: p[2], time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) }); toast(`Added ${p[0]}`); break; }
     case "delpreset": S.presets.splice(+el.dataset.i, 1); break;

@@ -294,3 +294,26 @@
 .rh-player.exam .rh-field input.right, .rh-player.exam .rh-field input.wrong { border-color: var(--accent); }
 .rh-player.exam .rh-why { background: var(--surface-2, var(--card)); }
 .rh-widget { min-height: 120px; }
+
+/* ---------- match the app redesign (design.css tokens, with fallbacks) ---------- */
+.rh { --rh-disp: var(--display, var(--disp)); --rh-soft: var(--accent-soft, color-mix(in srgb, var(--accent) 14%, transparent)); }
+.rh-head p { margin: 0; }
+.rh-pill, .rh-unit-h small { font-family: var(--rh-disp); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+.rh-unit-h h2 { font-family: var(--rh-disp); font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+.rh-cont b, .rh-act b, .rh-subj b, .rh-shead h1, .rh-btn, .rh-seg button, .rh-player h2 { font-family: var(--rh-disp); text-transform: uppercase; letter-spacing: .03em; }
+.rh-cont b { font-size: 20px; font-weight: 700; line-height: 1.05; }
+.rh-act { gap: 3px; padding: 14px; }
+.rh-act .ic { width: 38px; height: 38px; border-radius: 10px; background: var(--rh-soft); color: var(--accent); display: grid; place-items: center; margin-bottom: 8px; font-size: 19px; }
+.rh-act.hole .ic { background: var(--hole-bg); color: var(--hole); }
+.rh-act b { font-size: 20px; font-weight: 700; line-height: 1.05; }
+.rh-subj .dot, .rh-shead .dot { background: color-mix(in srgb, var(--sc, var(--accent)) 20%, transparent); color: var(--sc, var(--accent)); font-size: 19px; }
+.rh-subj .dot { width: 38px; height: 38px; margin-bottom: 4px; }
+.rh-subj .dot .ic, .rh-shead .dot .ic, .rh-act .ic .ic { width: 21px; height: 21px; }
+.rh-subj b { font-size: 19px; font-weight: 700; line-height: 1.05; }
+.rh-shead h1 { font-size: 30px; font-weight: 800; line-height: 1; }
+.rh-btn { font-weight: 700; font-size: 17px; letter-spacing: .06em; color: var(--accent-ink, #fff); }
+.rh-btn.ghost { color: var(--muted); }
+.rh-seg button { font-size: 14px; letter-spacing: .06em; }
+.rh-lesson b { font-family: var(--text, inherit); }
+.rh-kind { font-family: var(--rh-disp); letter-spacing: .09em; }
+.rh-player h3 { font-family: var(--rh-disp); text-transform: uppercase; letter-spacing: .02em; font-size: 24px; line-height: 1.05; }

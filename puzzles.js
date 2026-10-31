@@ -17,6 +17,7 @@ function dailyIndex(date, name, n) {
   const perm = permCache[key] || (permCache[key] = shuffle([...Array(n).keys()], rng("levelup-perm-" + name)));
   return perm[((dayNum(date) % n) + n) % n];
 }
+const isHard = k => { try { const S = window.App.internal.S.settings; return k === "word" ? !!S.hardWord : !!(S.hard && S.hard[k]); } catch { return false; } };
 const nextBtn = api => api.next ? `<button class="btn block" style="margin-top:8px" data-nextp>Next puzzle →</button>` : "";
 let keyHandler = null;
 function onKeys(fn) { if (keyHandler) document.removeEventListener("keydown", keyHandler); keyHandler = fn; if (fn) document.addEventListener("keydown", fn); }
@@ -85,13 +86,13 @@ function sudoku(host, date, st, api) {
       <div class="sudoku">${st.cells.map((v, i) => {
         const r = Math.floor(i / 9), c = i % 9;
         const peer = sel >= 0 && (r === sr || c === sc || (Math.floor(r / 3) === Math.floor(sr / 3) && Math.floor(c / 3) === Math.floor(sc / 3)));
-        const cls = [puz[i] ? "given" : "user", i === sel ? "cur" : (sv && v === sv ? "same" : peer ? "peer" : ""), (!puz[i] && v && v !== sol[i]) ? "bad" : ""].join(" ");
+        const cls = [puz[i] ? "given" : "user", i === sel ? "cur" : (sv && v === sv ? "same" : peer ? "peer" : ""), (!puz[i] && v && v !== sol[i] && !isHard("sudoku")) ? "bad" : ""].join(" ");
         const notes = !v && st.notes[i] && st.notes[i].length ? `<div class="notes">${[1,2,3,4,5,6,7,8,9].map(n => `<span>${st.notes[i].includes(n) ? n : ""}</span>`).join("")}</div>` : (v || "");
         return `<div class="${cls}" data-cell="${i}">${notes}</div>`;
       }).join("")}</div>
       <div class="numpad">${[1,2,3,4,5,6,7,8,9].map(n => `<button data-num="${n}" class="${counts[n] >= 9 ? "used" : ""}">${n}</button>`).join("")}</div>
       <div class="tools"><button class="btn ghost ${notesMode ? "on" : ""}" data-tool="notes">✏️ Notes ${notesMode ? "on" : "off"}</button><button class="btn ghost" data-tool="erase">⌫ Erase</button><button class="btn ghost" data-tool="hint">💡 Hint</button></div>
-      ${st.solved ? `<div class="win">Solved${st.time ? " in " + fmtTime(st.time) : ""}! 🎉</div>${nextBtn(api)}` : '<p class="muted small" style="text-align:center">Wrong numbers turn red right away.</p>'}`;
+      ${st.solved ? `<div class="win">Solved${st.time ? " in " + fmtTime(st.time) : ""}! 🎉</div>${nextBtn(api)}` : '<p class="muted small" style="text-align:center">' + (isHard("sudoku") ? "Hard mode: no error highlights. Trust your logic." : "Wrong numbers turn red right away.") + '</p>'}`;
   };
   const put = n => {
     if (sel < 0 || puz[sel] || st.solved) return;
@@ -128,68 +129,77 @@ function sudoku(host, date, st, api) {
 }
 
 // ================= MINI CROSSWORD =================
+// Crossword sizes by weekday: Mon–Fri 5x5, weekends 6x6. Practice draws from all sizes.
+function xwBank(size) { const all = window.XWORDS || []; return all.filter(z => z.size === size); }
+function xwPick(date) {
+  const all = window.XWORDS || [];
+  if (!isDate(date)) return all[hash(date + ":xwp") % all.length];
+  const dow = new Date(date + "T12:00:00").getDay();
+  const size = dow === 0 || dow === 6 ? 6 : 5;
+  const bank = xwBank(size).length ? xwBank(size) : all;
+  return bank[dailyIndex(date, "xw" + size, bank.length)];
+}
 function crossword(host, date, st, api) {
-  const list = window.CROSSWORDS;
-  const z = list[dailyIndex(date, "xw", list.length)];
-  const N = 4;
-  const sol = z.rows.join("");
-  st.cells = st.cells || Array(N * N).fill("");
-  let sel = st.cells.findIndex(v => !v); if (sel < 0) sel = 0;
-  let dir = "a";
-  // numbering for a full 4x4: across 1,5,6,7 ; down 1,2,3,4
-  const num = i => (i < N ? i + 1 : i % N === 0 ? N + i / N : null);
-  const clueNum = (d, k) => d === "a" ? (k === 0 ? 1 : N + k) : k + 1;
-  const clue = (d, k) => (d === "a" ? z.across[k] : z.down[k]);
-  const idxOf = () => (dir === "a" ? Math.floor(sel / N) : sel % N);
-  const inWord = i => (dir === "a" ? Math.floor(i / N) === Math.floor(sel / N) : i % N === sel % N);
+  const z = xwPick(date);
+  const N = z.size, G = z.grid.join(""), sol = G;
+  const black = i => G[i] === "#";
+  st.cells = st.cells && st.cells.length === N * N ? st.cells : Array.from(G, ch => ch === "#" ? "#" : "");
+  const words = [...z.across.map(w => ({ ...w, d: "a" })), ...z.down.map(w => ({ ...w, d: "d" }))]
+    .map(w => ({ ...w, cells: Array.from({ length: w.ans.length }, (_, k) => w.d === "a" ? w.r * N + w.c + k : (w.r + k) * N + w.c) }));
+  const numAt = {}; words.forEach(w => numAt[w.cells[0]] = w.n);
+  const wordFor = (i, d) => words.find(w => w.d === d && w.cells.includes(i));
+  let sel = st.cells.findIndex((v, i) => !black(i) && !v); if (sel < 0) sel = G.indexOf(G.replace(/#/g, "")[0]);
+  let dir = wordFor(sel, "a") ? "a" : "d";
   let checked = false;
+  const curWord = () => wordFor(sel, dir) || wordFor(sel, dir === "a" ? "d" : "a");
   const draw = () => {
-    const k = idxOf();
-    host.innerHTML = head("Mini crossword", "Every row and column is a word") + `
-      <div class="xw" style="grid-template-columns:repeat(${N},1fr)">${st.cells.map((v, i) => {
-        const n = num(i);
-        const cls = [i === sel ? "cur" : inWord(i) ? "word" : "", (st.solved || st.revealed) ? "ok" : checked && v && v !== sol[i] ? "no" : ""].join(" ");
-        return `<div class="${cls}" data-cell="${i}">${n ? `<sup>${n}</sup>` : ""}${esc(v)}</div>`;
+    const w = curWord(); if (w) dir = w.d;
+    const label = N === 6 ? "Weekend 6×6" : `${N}×${N}`;
+    host.innerHTML = head("Crossword", `${label} · tap a square twice to switch direction`) + `
+      <div class="xw" style="grid-template-columns:repeat(${N},1fr);max-width:${Math.min(360, N * 64)}px">${st.cells.map((v, i) => {
+        if (black(i)) return `<div class="blk"></div>`;
+        const cls = [i === sel ? "cur" : w && w.cells.includes(i) ? "word" : "", (st.solved || st.revealed) ? "ok" : checked && v && v !== sol[i] ? "no" : ""].join(" ");
+        return `<div class="${cls}" data-cell="${i}" style="font-size:${N >= 7 ? 20 : N === 6 ? 24 : 28}px">${numAt[i] ? `<sup>${numAt[i]}</sup>` : ""}${esc(v)}</div>`;
       }).join("")}</div>
-      <div class="clue-bar"><button data-nav="-1">‹</button><div class="grow" data-flip><span class="muted">${clueNum(dir, k)}${dir === "a" ? "A" : "D"}</span> ${esc(clue(dir, k))}</div><button data-nav="1">›</button></div>
-      ${st.solved || st.revealed ? `<div class="win">${st.revealed ? "Revealed. Try again tomorrow!" : `Solved${st.time ? " in " + fmtTime(st.time) : ""}! 🎉`}</div>` : keyboard()}
-      <div class="tools"><button class="btn ghost" data-tool="check">Check</button><button class="btn ghost" data-tool="reveal">Reveal</button></div>
+      <div class="clue-bar"><button data-nav="-1">‹</button><div class="grow" data-flip><span class="muted">${w ? w.n + (w.d === "a" ? "A" : "D") : ""}</span> ${esc(w ? w.clue : "")}</div><button data-nav="1">›</button></div>
+      ${st.solved || st.revealed ? `<div class="win">${st.revealed ? "Revealed. New grid tomorrow." : `Solved${st.time ? " in " + fmtTime(st.time) : ""}!`}</div>${nextBtn(api)}` : keyboard()}
+      <div class="tools">${isHard("crossword") ? "" : `<button class="btn ghost" data-tool="check">Check</button><button class="btn ghost" data-tool="word">Reveal word</button>`}<button class="btn ghost" data-tool="reveal">Reveal all</button></div>
       <div class="clues" style="margin-top:14px">
-        <div><h3>Across</h3>${z.across.map((c, j) => `<p class="${dir === "a" && j === k ? "on" : ""}" data-clue="a${j}"><b>${clueNum("a", j)}</b> ${esc(c)}</p>`).join("")}</div>
-        <div><h3>Down</h3>${z.down.map((c, j) => `<p class="${dir === "d" && j === k ? "on" : ""}" data-clue="d${j}"><b>${clueNum("d", j)}</b> ${esc(c)}</p>`).join("")}</div>
+        <div><h3>Across</h3>${z.across.map((c, j) => `<p class="${w && w.d === "a" && w.n === c.n ? "on" : ""}" data-clue="a${j}"><b>${c.n}</b> ${esc(c.clue)}</p>`).join("")}</div>
+        <div><h3>Down</h3>${z.down.map((c, j) => `<p class="${w && w.d === "d" && w.n === c.n ? "on" : ""}" data-clue="d${j}"><b>${c.n}</b> ${esc(c.clue)}</p>`).join("")}</div>
       </div>`;
   };
-  const step = d => { // move within word
-    if (dir === "a") { const c = sel % N + d; if (c >= 0 && c < N) sel += d; }
-    else { const r = Math.floor(sel / N) + d; if (r >= 0 && r < N) sel += d * N; }
-  };
-  const jumpWord = d => { let k = idxOf() + d; if (k >= N) { k = 0; dir = dir === "a" ? "d" : "a"; } if (k < 0) { k = N - 1; dir = dir === "a" ? "d" : "a"; } sel = dir === "a" ? k * N : k; };
+  const order = () => words.slice().sort((a, b) => (a.d === b.d ? a.n - b.n : a.d === "a" ? -1 : 1));
+  const jumpWord = d => { const o = order(); const w = curWord(); let k = o.indexOf(w) + d; k = (k + o.length) % o.length; const nw = o[k]; dir = nw.d; sel = nw.cells.find(i => !st.cells[i]) ?? nw.cells[0]; };
+  const step = d => { const w = curWord(); if (!w) return; const k = w.cells.indexOf(sel) + d; if (k >= 0 && k < w.cells.length) sel = w.cells[k]; };
+  const solvedNow = () => st.cells.every((v, i) => v === sol[i]);
   const type = ch => {
     if (st.solved || st.revealed) return;
     started(st); checked = false;
-    if (ch === "back") {
-      if (!st.cells[sel]) step(-1);
-      st.cells[sel] = "";
-    } else if (ch === "enter") { jumpWord(1); }
+    if (ch === "back") { if (!st.cells[sel]) step(-1); st.cells[sel] = ""; }
+    else if (ch === "enter") jumpWord(1);
     else {
       st.cells[sel] = ch;
-      const atEnd = dir === "a" ? sel % N === N - 1 : Math.floor(sel / N) === N - 1;
-      if (atEnd) jumpWord(1); else step(1);
+      const w = curWord(); const k = w.cells.indexOf(sel);
+      const nextEmpty = w.cells.slice(k + 1).find(i => !st.cells[i]);
+      if (nextEmpty != null) sel = nextEmpty; else if (k === w.cells.length - 1 || w.cells.every(i => st.cells[i])) jumpWord(1); else step(1);
     }
-    if (st.cells.join("") === sol) finish(st, api, "Crossword solved! 🎉");
-    else if (st.cells.every(v => v)) api.toast("Not quite. Tap Check to see which letters are off.");
+    if (solvedNow()) finish(st, api, "Crossword solved!");
+    else if (st.cells.every((v, i) => black(i) || v)) api.toast("Not quite. Tap Check to see which letters are off.");
     api.save(); draw();
   };
   host.onclick = e => {
     if (e.target.closest("[data-back]")) { onKeys(null); return api.back(); }
-    const c = e.target.closest("[data-cell]"); if (c) { const i = +c.dataset.cell; if (i === sel) dir = dir === "a" ? "d" : "a"; else sel = i; draw(); return; }
+    if (e.target.closest("[data-nextp]")) { onKeys(null); return api.next(); }
+    const c = e.target.closest("[data-cell]"); if (c) { const i = +c.dataset.cell; if (i === sel) { const o = dir === "a" ? "d" : "a"; if (wordFor(i, o)) dir = o; } else { sel = i; if (!wordFor(i, dir)) dir = dir === "a" ? "d" : "a"; } draw(); return; }
     const k = e.target.closest("[data-key]"); if (k) return type(k.dataset.key);
     const nv = e.target.closest("[data-nav]"); if (nv) { jumpWord(+nv.dataset.nav); draw(); return; }
-    if (e.target.closest("[data-flip]")) { dir = dir === "a" ? "d" : "a"; draw(); return; }
-    const cl = e.target.closest("[data-clue]"); if (cl) { dir = cl.dataset.clue[0]; const j = +cl.dataset.clue.slice(1); sel = dir === "a" ? j * N : j; draw(); return; }
-    const t = e.target.closest("[data-tool]");
-    if (t && t.dataset.tool === "check") { checked = true; draw(); }
-    if (t && t.dataset.tool === "reveal" && !st.solved) { st.cells = [...sol]; st.revealed = true; api.save(); draw(); }
+    if (e.target.closest("[data-flip]")) { const o = dir === "a" ? "d" : "a"; if (wordFor(sel, o)) dir = o; draw(); return; }
+    const cl = e.target.closest("[data-clue]"); if (cl) { const d = cl.dataset.clue[0], j = +cl.dataset.clue.slice(1); const ww = (d === "a" ? z.across : z.down)[j]; dir = d; sel = (d === "a" ? words.find(x => x.d === "a" && x.n === ww.n) : words.find(x => x.d === "d" && x.n === ww.n)).cells[0]; draw(); return; }
+    const t = e.target.closest("[data-tool]"); if (!t || st.solved) return;
+    if (t.dataset.tool === "check") { checked = true; draw(); }
+    if (t.dataset.tool === "word") { const w = curWord(); w.cells.forEach(i => st.cells[i] = sol[i]); st.helped = true; if (solvedNow()) { st.revealed = true; } api.save(); draw(); }
+    if (t.dataset.tool === "reveal") { st.cells = Array.from(sol); st.revealed = true; api.save(); draw(); }
   };
   onKeys(e => {
     if (e.metaKey || e.ctrlKey) return;
@@ -207,8 +217,19 @@ function scoreGuess(guess, answer) {
   for (let i = 0; i < 5; i++) if (res[i] !== "correct" && left[guess[i]]) { res[i] = "present"; left[guess[i]]--; }
   return res;
 }
+// One week in four is themed (tech, fight, gym, rotating); the rest draw from the big answer bank, no repeats for years.
+function wordTheme(date) {
+  const WB = window.WORDS; if (!WB || !isDate(date)) return null;
+  const wk = Math.floor(dayNum(date) / 7); if (wk % 4 !== 3) return null;
+  const names = Object.keys(WB.themes); return names[Math.floor(wk / 4) % names.length];
+}
+let validSet = null;
+function wordValid() { if (!validSet) { const WB = window.WORDS || { answers: D.words, valid: [] }; validSet = new Set([...WB.answers, ...WB.valid, ...Object.values(WB.themes || {}).flat()]); } return validSet; }
 function word(host, date, st, api) {
-  const answer = D.words[dailyIndex(date, "word", D.words.length)];
+  const WB = window.WORDS || { answers: D.words, valid: [], themes: {} };
+  const theme = wordTheme(date);
+  const answer = theme ? WB.themes[theme][dailyIndex(date, "wordtheme-" + theme, WB.themes[theme].length)] : WB.answers[dailyIndex(date, "word2", WB.answers.length)];
+  const VALID = wordValid();
   const hard = !!(window.App && window.App.internal.S.settings.hardWord);
   st.guesses = st.guesses || [];
   let typing = "";
@@ -224,7 +245,7 @@ function word(host, date, st, api) {
       const txt = g || (r === st.guesses.length && !over ? typing : "");
       rows += `<div class="wrow ${r === shakeRow ? "shake" : ""}">${[0,1,2,3,4].map(i => `<div class="t ${sc ? sc[i] : txt[i] ? "filled" : ""}">${esc(txt[i] || "")}</div>`).join("")}</div>`;
     }
-    host.innerHTML = head("Word guess", `${hard ? "Hard mode · " : ""}Green = right spot · Gold = in the word`) + `<div class="wg">${rows}</div>
+    host.innerHTML = head("Word guess", `${theme ? theme + " · " : ""}${hard ? "Hard mode · " : ""}Green = right spot · Gold = in the word`) + `<div class="wg">${rows}</div>
       ${st.solved ? `<div class="win">Got it in ${st.guesses.length}! 🎉</div>` : st.failed ? `<div class="win" style="background:var(--accent-soft)">The word was <b>${answer.toUpperCase()}</b>. New one tomorrow.</div>` : ""}
       ${over ? nextBtn(api) : ""}
       ${over && window.App.library ? `<button class="btn ghost block" style="margin-top:8px" data-saveword>⭐ Save "${answer.toUpperCase()}" to my library</button>` : ""}
@@ -241,6 +262,7 @@ function word(host, date, st, api) {
         return null; })() : null;
       if (typing.length < 5) { shakeRow = st.guesses.length; api.toast("Need 5 letters"); }
       else if (hardMiss) { shakeRow = st.guesses.length; api.toast(hardMiss); }
+      else if (!VALID.has(typing)) { shakeRow = st.guesses.length; api.toast("Not in the word list"); }
       else {
         started(st); st.guesses.push(typing); typing = "";
         if (st.guesses[st.guesses.length - 1] === answer) finish(st, api, ["Genius!", "Magnificent!", "Impressive!", "Splendid!", "Great!", "Phew!"][st.guesses.length - 1]);
@@ -309,7 +331,7 @@ function groups(host, date, st, api) {
         ${left.map(w => `<button data-w="${esc(w)}" class="${selected.includes(w) ? "sel" : ""}" style="${w.length > 8 ? "font-size:10px" : ""}">${esc(w)}</button>`).join("")}
       </div>
       ${over ? `<div class="win" style="${st.failed ? "background:var(--accent-soft)" : ""}">${st.solved ? `Solved with ${st.mistakes} mistake${st.mistakes === 1 ? "" : "s"}! 🎉` : "Out of tries. Here are the groups."}</div>${nextBtn(api)}` : `
-      <div class="lives">Mistakes left ${[0,1,2,3].map(i => `<i class="${i < st.mistakes ? "gone" : ""}"></i>`).join("")}</div>
+      <div class="lives">${isHard("groups") ? "Hard mode · " : ""}Mistakes left ${(isHard("groups") ? [0,1] : [0,1,2,3]).map(i => `<i class="${i < st.mistakes ? "gone" : ""}"></i>`).join("")}</div>
       <div class="tools"><button class="btn ghost" data-tool="shuffle">Shuffle</button><button class="btn ghost" data-tool="clear">Deselect</button><button class="btn" data-tool="submit" ${selected.length === 4 ? "" : "disabled style='opacity:.4'"}>Submit</button></div>`}`;
   };
   host.onclick = e => {
@@ -329,7 +351,7 @@ function groups(host, date, st, api) {
       const counts = {}; selected.forEach(w => { const g = groupOf(w); counts[g] = (counts[g] || 0) + 1; });
       const best = Math.max(...Object.values(counts));
       if (best === 4) { st.found.push(groupOf(selected[0])); selected = []; if (st.found.length === 4) finish(st, api, "All groups found! 🎉"); }
-      else { st.mistakes++; api.toast(best === 3 ? "One away…" : "Not a group"); if (st.mistakes >= 4) st.failed = true; }
+      else { st.mistakes++; api.toast(best === 3 && !isHard("groups") ? "One away…" : "Not a group"); if (st.mistakes >= (isHard("groups") ? 2 : 4)) st.failed = true; }
       api.save();
     }
     draw();
