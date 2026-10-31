@@ -439,6 +439,9 @@ window.Features = {
         <button data-feat="focus"><span>🔒</span>Security+ hour<small>${f ? fmt(focusLeft(f)) + " left" : I.isChecked("secplus") ? "Done ✓" : "60 min focus"}</small></button>
         <button data-feat="boxing"><span>🥊</span>Boxing rounds<small>${I.isChecked("boxing") ? "Done ✓" : "Timer + combos"}</small></button>
         <button data-feat="night"><span>🌙</span>Night shutdown<small>${dd.win ? "Win logged ✓" : "Wind down"}</small></button>
+        ${A.music ? `<button data-feat="music"><span>🎹</span>Music room<small>Piano, guitar, tuner</small></button>` : ""}
+        ${A.dance ? `<button data-feat="dance"><span>🕺</span>Dance practice<small>Line dances + rhythm</small></button>` : ""}
+        ${A.geo ? `<button data-feat="geo"><span>🗺️</span>World map<small>Light up the fog</small></button>` : ""}
         <button data-feat="rabbit" class="wide"><span>🐇</span>Random rabbit hole<small>${(() => { try { const n = A.learn ? A.learn.dueReviewCount() : 0; return n ? `${n} review${n === 1 ? "" : "s"} due in Learn` : "Jump into a random lesson"; } catch { return "Jump into a random lesson"; } })()}</small></button>
       </div>`;
     }
@@ -459,6 +462,9 @@ document.addEventListener("click", e => {
   if (f === "focus") focusState() ? openFocus() : startFocus();
   if (f === "boxing") openBoxing();
   if (f === "night") openNight();
+  if (f === "music" && A.music) A.music.open("piano");
+  if (f === "dance" && A.dance) A.dance.open();
+  if (f === "geo" && A.geo) A.geo.open();
   if (f === "rabbit") { if (A.learn && A.learn.randomRabbitHole) A.learn.randomRabbitHole(); else A.go("learn"); }
   if (f === "toptask") { const dd = I.day(I.cur); dd.topTaskDone = !dd.topTaskDone; I.save(); I.render(); }
 });

@@ -317,3 +317,6 @@
 .rh-lesson b { font-family: var(--text, inherit); }
 .rh-kind { font-family: var(--rh-disp); letter-spacing: .09em; }
 .rh-player h3 { font-family: var(--rh-disp); text-transform: uppercase; letter-spacing: .02em; font-size: 24px; line-height: 1.05; }
+
+/* code must show exactly what you type: no >= / -> ligatures */
+.rh pre, .rh code, .rh-player pre, .rh-player code { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
