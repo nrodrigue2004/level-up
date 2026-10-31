@@ -35,7 +35,7 @@
       q('Someone follows an employee through a badge-controlled door without badging in. What is this called?', ['Shoulder surfing', 'Tailgating / piggybacking', 'Dumpster diving', 'Pharming'], 1, 'Access control vestibules (mantraps) are the classic fix.')
     ],
     'sp-vulns-app': [
-      q('A web form field accepts `<script>` tags that later run in other users\' browsers. What vulnerability is this?', ['SQL injection', 'Stored cross-site scripting', 'Buffer overflow', 'Race condition'], 1, 'Script saved and served to others = stored XSS.'),
+      q('A web form field accepts &lt;script&gt; tags that later run in other users\' browsers. What vulnerability is this?', ['SQL injection', 'Stored cross-site scripting', 'Buffer overflow', 'Race condition'], 1, 'Script saved and served to others = stored XSS.'),
       q('A program checks a file\'s permissions, then opens it; in between, an attacker swaps the file for a symlink to /etc/shadow. What is this?', ['TOCTOU race condition', 'Memory leak', 'Integer overflow', 'Directory traversal'], 0, 'Time-of-check to time-of-use.'),
       q('A request includes ../../../../etc/passwd in a filename parameter. Which attack is being attempted?', ['Directory traversal', 'CSRF', 'Replay', 'XSS'], 0, 'Path traversal walks out of the intended directory.')
     ],
