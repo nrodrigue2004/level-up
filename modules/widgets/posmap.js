@@ -53,6 +53,7 @@
       <div class="seg pm-who"><button class="${who === "top" ? "on" : ""}" data-who="top">I'm on top / attacking</button><button class="${who === "bottom" ? "on" : ""}" data-who="bottom">I'm on bottom / defending</button></div>
       <svg viewBox="0 0 340 515" class="pm-board" role="img" aria-label="Position map">${lines}${nodes}</svg>
       <div class="card pm-panel"><h2>${esc(P[cur].name)} <span class="right">${who === "top" ? "Top" : "Bottom"}</span></h2>
+        ${window.FightArt ? `<div class="fart-wrap">${window.FightArt.pose(cur, { you: who })}<div class="fart-key small"><span><i style="background:var(--accent)"></i>You</span><span><i style="background:#5b8fd6"></i>Opponent</span></div></div>` : ""}
         <p class="small muted" style="margin:0 0 10px">${esc(P[cur].about)}</p>
         ${Object.keys(groups).length ? Object.entries(groups).map(([k, list]) => `<div class="pm-kind" style="--k:${KIND[k][1]}">${KIND[k][0]}s</div>${list.map(e => `<button class="pm-move" data-name="${esc(e[2])}" data-go="${e[1]}" data-sub="${e[3] === "submission" ? 1 : ""}"><span>${esc(e[2])}</span><small>${e[3] === "submission" ? "Fight over" : "→ " + esc(P[e[1]].name)}</small></button>`).join("")}`).join("") : `<p class="small muted">Nothing mapped from this side yet. Flip the perspective above.</p>`}
         ${inn.length ? `<div class="pm-kind" style="--k:var(--muted)">How you get here</div><div class="small muted">${[...new Set(inn.map(e => `${esc(e[2])} (from ${esc(P[e[0]].name)})`))].slice(0, 6).join(" · ")}</div>` : ""}
