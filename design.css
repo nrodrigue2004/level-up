@@ -209,3 +209,9 @@ details.section summary .count { font-family: var(--display); font-size: 15px; l
 .fart { width: 100%; height: auto; display: block; }
 .fart-key { display: flex; gap: 14px; justify-content: flex-end; color: var(--muted); }
 .fart-key i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+/* compact routine tiles so the plan itself shows up sooner */
+.routines button { display: grid; grid-template-columns: 34px 1fr; column-gap: 10px; row-gap: 1px; align-items: center; text-align: left; padding: 10px 12px; font-size: 16.5px; min-height: 0; }
+.routines button > span:first-child { grid-row: span 2; width: 34px; height: 34px; margin-bottom: 0; align-self: center; }
+.routines button > span:first-child .ic { width: 19px; height: 19px; }
+.routines button small { grid-column: 2; font-size: 12px; line-height: 1.2; }
+.routines button, .routines button.wide { justify-items: start; text-align: left; } .routines button small { justify-self: start; text-align: left; }

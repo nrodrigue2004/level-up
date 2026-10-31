@@ -179,3 +179,22 @@
   var at = -1; S.units.forEach(function (u, i) { if (u.name === 'The grappling map') at = i; });
   S.units.splice(at < 0 ? S.units.length : at + 1, 0, unit);
 })();
+/* Position pictures (shell's FightArt) at the top of each position lesson. */
+(function () {
+  var S = (window.RH_SUBJECTS || []).filter(function (s) { return s.id === 'mma'; })[0]; if (!S) return;
+  var ART = {
+    'mma-ranges': ['standing', 'top', 'Both fighters standing: striking range.'],
+    'mma-stance': ['standing', 'top', 'Fighting stance: feet staggered, hands up.'],
+    'mma-posmap-guard': ['guard', 'bottom', 'Closed guard: you\'re on bottom, legs locked around their waist.'],
+    'mma-posmap-mount': ['mount', 'top', 'Mount: you\'re sitting on their torso.'],
+    'mma-ground-pound': ['mount', 'top', 'Mount is the best ground-and-pound position.'],
+    'mg-anatomy': ['guard', 'bottom', 'Closed guard from the bottom.'],
+    'mg-open': ['halfguard', 'bottom', 'Half guard: one of their legs trapped between yours.'],
+    'mg-mma': ['cage', 'bottom', 'Against the cage: where the wall walk happens.'],
+    'mg-top': ['guard', 'top', 'You\'re on top, inside their closed guard.']
+  };
+  S.units.forEach(function (u) { u.lessons.forEach(function (l) {
+    var a = ART[l.id]; if (!a || l.cards.some(function (c) { return c.t === 'art'; })) return;
+    l.cards.splice(1, 0, { t: 'art', pose: a[0], o: { you: a[1] }, h: 'See it', cap: a[2], fallback: '<p>' + a[2] + '</p>' });
+  }); });
+})();

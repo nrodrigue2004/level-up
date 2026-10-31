@@ -106,6 +106,10 @@
   window.RH_SUBJECTS.push({
     id: 'fe', name: 'FE Electrical & Computer', mark: '⚡', color: '#e3b341', stat: 'mind', group: 'Certs & career',
     blurb: 'NCEES FE exam: circuits to computer systems.',
+    exam: 'FE Electrical & Computer',
+    examCfg: { n: 110, min: 320, pbq: 0, byUnit: true, calc: true, scaled: false, pass: 70, note: 'NCEES doesn\'t publish a pass mark; about 70% on practice exams is a common readiness target.',
+      w: { 1: 14, 2: 14, 3: 20, 4: 12, 5: 24, 6: 16 },
+      names: { 1: 'Math, economics & ethics', 2: 'DC circuits', 3: 'AC circuits & power', 4: 'Electronics', 5: 'Digital & computer systems', 6: 'Signals, controls & comms' } },
     intro: 'The Fundamentals of Engineering exam, Electrical and Computer discipline: 110 questions over about 5 hours 20 minutes of exam time, computer-based at Pearson VUE, with the NCEES FE Reference Handbook on screen as your only reference. Download the handbook free from ncees.org and get fast at finding formulas in it; that\'s half the battle. Every numeric problem here is generated fresh, so Practice drill never runs out. Use the NCEES-approved calculator you\'ll take into the exam (e.g. Casio fx-115 or TI-36X Pro).',
     placement: [
       { t: 'mcq', q: 'Two 100 Ω resistors in parallel equal:', opts: ['200 Ω', '100 Ω', '50 Ω', '25 Ω'], a: 2, why: '50 Ω. DC circuits, Unit 2.' },

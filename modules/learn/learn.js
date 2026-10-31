@@ -329,9 +329,9 @@
       host.appendChild(pc);
     }
     if (s.exam) {
-      var last = (d.exams || []).slice(-1)[0];
+      var last = (d.exams || []).filter(function (x) { return !x.subj || x.subj === s.id; }).slice(-1)[0];
       host.appendChild(h('button', { class: 'rh-cont', style: 'background:var(--bad)', 'data-exam': s.id },
-        '<span class="play">\u23F1\uFE0F</span><span class="t"><b>Full mock exam \u00b7 90 questions \u00b7 90 min</b><span>PBQs first, domains weighted like the real ' + esc(s.exam) + '. Scored 100\u2013900' + (last ? ' \u00b7 last: ' + last.score : '') + '.</span></span>'));
+        '<span class="play">\u23F1\uFE0F</span><span class="t"><b>Full mock exam \u00b7 ' + examCfg(s).n + ' questions \u00b7 ' + (examCfg(s).min >= 120 ? Math.round(examCfg(s).min / 6) / 10 + ' hr' : examCfg(s).min + ' min') + '</b><span>' + (examCfg(s).pbq ? 'PBQs first, d' : 'D') + 'omains weighted like the real ' + esc(s.exam) + '. ' + (examCfg(s).scaled ? 'Scored 100\u2013900' : 'Scored in %') + (last ? ' \u00b7 last: ' + last.score : '') + '.</span></span>'));
     }
     var dl = d.depth == null ? 1 : d.depth, seg = h('div', { class: 'rh-seg', role: 'group', 'aria-label': 'Detail level' });
     seg.innerHTML = '<span>Detail</span>' + ['Simple', 'Standard', 'Deep'].map(function (n, i) { return '<button data-depth="' + i + '" class="' + (i === dl ? 'on' : '') + '">' + n + '</button>'; }).join('');
@@ -496,27 +496,33 @@
 
   /* Timed mock exam: real SY0-701 shape. PBQs first, then multiple choice weighted by domain, 90 min, scaled 100-900, 750 passes. */
   var EXAM_W = { 1: 12, 2: 22, 3: 18, 4: 28, 5: 20 };
+  // Per-subject exam shape. Security+ is the default; other subjects set s.examCfg (byUnit = weight by unit position).
+  var SECPLUS_CFG = { n: 90, min: 90, pbq: 4, w: EXAM_W, scaled: true, pass: 750, names: { 1: 'General security concepts', 2: 'Threats, vulns & mitigations', 3: 'Security architecture', 4: 'Security operations', 5: 'Program management' } };
+  function examCfg(sj) { return (sj && sj.examCfg) || SECPLUS_CFG; }
   function startExam(subjId) {
     subjId = subjId || 'secplus';
     var sj = SUBJECTS.filter(function (x) { return x.id === subjId; })[0]; if (!sj) return;
-    var byDom = {}, pbqs = [];
+    var byDom = {}, pbqs = [], cfg = examCfg(sj);
     Object.keys(LESSONS).forEach(function (id) {
-      var L = LESSONS[id]; if (L.s.id !== subjId || !L.u.dom) return;
+      var L = LESSONS[id]; if (L.s.id !== subjId) return;
+      var dom = cfg.byUnit ? sj.units.indexOf(L.u) + 1 : L.u.dom; if (!dom || !cfg.w[dom]) return;
       L.l.cards.forEach(function (c, i) {
-        var it = { c: c, k: id + '#' + i, dom: L.u.dom };
-        if (c.t === 'pbq') pbqs.push(it); else if (c.t === 'mcq' || c.t === 'tf' || c.t === 'gen') (byDom[L.u.dom] = byDom[L.u.dom] || []).push(it);
+        var it = { c: c, k: id + '#' + i, dom: dom };
+        if (c.t === 'pbq') pbqs.push(it); else if (c.t === 'mcq' || c.t === 'tf' || c.t === 'gen' || (cfg.calc && c.t === 'calc')) (byDom[dom] = byDom[dom] || []).push(it);
       });
     });
-    var cards = shuffle(pbqs).slice(0, 4), want = 90 - cards.length;
-    Object.keys(EXAM_W).forEach(function (dm) {
-      var pool = byDom[dm] || [], n = Math.round(want * EXAM_W[dm] / 100), got = pickFresh(pool, n);
-      while (got.length < n && pool.length && got.length < pool.length * 2) got.push(pick(pool.filter(function (x) { return x.c.t === 'gen'; }).concat(pool)));
+    var cards = shuffle(pbqs).slice(0, cfg.pbq || 0), npbq = cards.length, want = cfg.n - cards.length;
+    Object.keys(cfg.w).forEach(function (dm) {
+      var pool = byDom[dm] || [], n = Math.round(want * cfg.w[dm] / 100), got = pickFresh(pool, n);
+      var gp = pool.filter(function (x) { return x.c.t === 'gen'; });
+      // pad with fresh generated problems (never repeats exactly); fall back to static repeats only if a domain has no generators
+      while (got.length < n && pool.length && (gp.length || got.length < pool.length * 2)) got.push(pick(gp.length ? gp : pool));
       cards = cards.concat(shuffle(got));
     });
     if (cards.length < 10) { A.toast('Not enough questions yet'); return; }
-    cards = cards.slice(0, 4).concat(shuffle(cards.slice(4)));
+    cards = cards.slice(0, npbq).concat(shuffle(cards.slice(npbq)));
     STACK.length = 0;
-    P = { mode: 'exam', subjId: subjId, id: null, title: sj.name + ' mock exam', subj: sj, cards: cards, i: 0, right: 0, graded: 0, xp: 0, combo: 0, best: 0, t0: Date.now(), deadline: Date.now() + 90 * 60000, dom: {} };
+    P = { mode: 'exam', subjId: subjId, id: null, title: sj.name + ' mock exam', subj: sj, cards: cards, i: 0, right: 0, graded: 0, xp: 0, combo: 0, best: 0, t0: Date.now(), deadline: Date.now() + cfg.min * 60000, dom: {}, cfg: cfg };
     openPlayer();
   }
   var examTick = null;
@@ -624,9 +630,9 @@
     } else if (P.mode === 'review') {
       A.award('learn:review:' + dayStr(), 15, 'mind');
     } else if (P.mode === 'exam') {
-      var sc = Math.round(100 + 800 * (P.graded ? P.right / P.graded : 0));
-      d.exams = (d.exams || []).concat({ at: dayStr(), score: sc, n: P.graded, subj: P.subjId }).slice(-20);
-      A.award('learn:exam:' + P.subjId + ':' + dayStr(), sc >= 750 ? 80 : 40, 'mind');
+      var ec = P.cfg || SECPLUS_CFG, ac0 = P.graded ? P.right / P.graded : 0, sc = ec.scaled ? Math.round(100 + 800 * ac0) : Math.round(ac0 * 100);
+      d.exams = (d.exams || []).concat({ at: dayStr(), score: sc, n: P.graded, subj: P.subjId, scale: ec.scaled ? '100-900' : 'pct' }).slice(-20);
+      A.award('learn:exam:' + P.subjId + ':' + dayStr(), sc >= ec.pass ? 80 : 40, 'mind');
     } else if (P.mode === 'drill') {
       A.award('learn:drill:' + P.subjId + ':' + dayStr(), 10, (P.subj && P.subj.stat) || 'mind');
     } else if (P.mode === 'quiz') {
@@ -652,9 +658,9 @@
 
     if (P.mode === 'exam') {
       clearInterval(examTick); examTick = null; playerEl.classList.remove('exam');
-      var score = Math.round(100 + 800 * acc), passed = score >= 750, DN = { 1: 'General security concepts', 2: 'Threats, vulns & mitigations', 3: 'Security architecture', 4: 'Security operations', 5: 'Program management' };
-      cardHost.innerHTML = '<div class="rh-card" style="gap:14px"><div style="text-align:center"><div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:800" class="muted">Scaled score (estimate)</div>' +
-        '<div style="font-family:var(--disp);font-size:54px;color:' + (passed ? 'var(--good)' : 'var(--bad)') + '">' + score + '</div><p class="muted" style="margin:0">' + (passed ? 'Passing range. The real exam needs 750 of 900.' : 'The real exam needs 750 of 900. Your misses went into Review.') + ' ' + P.right + '/' + P.graded + ' answered right' + (P.graded < P.cards.length ? ', ' + (P.cards.length - P.graded) + ' unanswered' : '') + (mins ? ', ' + mins + ' min' : '') + '.</p></div>' +
+      var ec2 = P.cfg || SECPLUS_CFG, score = ec2.scaled ? Math.round(100 + 800 * acc) : Math.round(acc * 100), passed = score >= ec2.pass, DN = ec2.names;
+      cardHost.innerHTML = '<div class="rh-card" style="gap:14px"><div style="text-align:center"><div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:800" class="muted">' + (ec2.scaled ? 'Scaled score (estimate)' : 'Percent correct') + '</div>' +
+        '<div style="font-family:var(--disp);font-size:54px;color:' + (passed ? 'var(--good)' : 'var(--bad)') + '">' + score + (ec2.scaled ? '' : '%') + '</div><p class="muted" style="margin:0">' + (ec2.scaled ? (passed ? 'Passing range. The real exam needs 750 of 900.' : 'The real exam needs 750 of 900. Your misses went into Review.') : (passed ? 'At or above your ' + ec2.pass + '% practice target. ' + (ec2.note || '') : 'Below your ' + ec2.pass + '% practice target. Your misses went into Review. ' + (ec2.note || ''))) + ' ' + P.right + '/' + P.graded + ' answered right' + (P.graded < P.cards.length ? ', ' + (P.cards.length - P.graded) + ' unanswered' : '') + (mins ? ', ' + mins + ' min' : '') + '.</p></div>' +
         Object.keys(DN).map(function (k) { var v = P.dom[k] || [0, 0], pc = v[1] ? Math.round(v[0] / v[1] * 100) : 0; return '<div><div style="display:flex;justify-content:space-between;font-size:14px"><b>' + k + '.0 ' + DN[k] + '</b><span>' + v[0] + '/' + v[1] + '</span></div><div class="rh-bar"><i style="width:' + pc + '%;background:' + (pc >= 80 ? 'var(--good)' : pc >= 60 ? 'var(--accent)' : 'var(--bad)') + '"></i></div></div>'; }).join('') +
         '<p class="muted" style="margin:0;font-size:13px">Weakest domain first: go back to its lessons, then run Review before the next mock.</p></div>';
       var dn = h('button', { class: 'rh-btn block' }, 'Done'); dn.onclick = closePlayer; foot.appendChild(dn); return;
@@ -785,6 +791,15 @@
       kindTag(el, 'prereq'); el.appendChild(h('h3', {}, 'This builds on'));
       el.appendChild(h('p', { class: 'muted', style: 'margin:0' }, 'You haven\'t done these yet. Tap one for a quick look and you\'ll come right back, or just keep going if you already know it.'));
       c.ids.forEach(function (id) { el.appendChild(h('button', { class: 'rh-holelink', 'data-hole': id, style: 'align-self:flex-start;text-align:left' }, '\uD83D\uDC07 ' + esc(LESSONS[id].l.title) + ' \u2192')); });
+      done({ graded: false });
+    },
+    /* art: original fight illustration from the shell (window.FightArt.pose). Skipped quietly if unavailable. */
+    art: function (el, c, done) {
+      var F = window.FightArt, svg = null; try { svg = F && F.pose ? F.pose(c.pose, c.o || {}) : null; } catch (e) { svg = null; }
+      if (!svg) { RENDER.read(el, { h: c.h || 'Picture it', body: c.fallback || '<p>Picture the position described in this lesson.</p>' }, done); return; }
+      kindTag(el, 'read'); if (c.h) el.appendChild(h('h3', {}, c.h));
+      var box = h('div', { class: 'rh-art' }); if (typeof svg === 'string') box.innerHTML = svg; else box.appendChild(svg); el.appendChild(box);
+      if (c.cap) el.appendChild(h('p', { class: 'muted', style: 'margin:0;font-size:15px' }, c.cap));
       done({ graded: false });
     },
     widget: function (el, c, done) {
