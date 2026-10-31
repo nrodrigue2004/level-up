@@ -149,7 +149,19 @@ function completeFocus(early) {
   const dd = I.day(f.date); dd.secMins = (dd.secMins || 0) + mins;
   if (!early || dd.secMins >= 60) { dd.checks.secplus = true; }
   I.S.focus = null; I.save();
-  if (!early) { bell(3); I.toast("Security+ hour done ✓"); } else I.toast(`Logged ${mins} min of Security+`);
+  if (!early) { bell(3); I.toast("Security+ hour done ✓"); secQuiz(f.date); } else I.toast(`Logged ${mins} min of Security+`);
+}
+function secNext() { try { return A.learn && typeof A.learn.secplusNext === "function" ? A.learn.secplusNext() : null; } catch { return null; } }
+function secQuiz(date) {
+  if (!A.learn || typeof A.learn.quiz !== "function") return;
+  try {
+    A.learn.quiz("secplus", 5, r => {
+      if (!r) return;
+      const dd = I.day(date); dd.secQuiz = { correct: r.correct, total: r.total };
+      A.xp.award("focusquiz:" + date, 5 + 3 * (r.correct || 0), "mind"); I.save();
+      I.toast(`Quiz: ${r.correct}/${r.total}`);
+    });
+  } catch {}
 }
 let focusUI = null;
 function openFocus() {
@@ -162,10 +174,11 @@ function openFocus() {
     el.innerHTML = `<div class="fs-top"><button class="icon-btn" data-x title="Minimize">⌄</button><span class="muted small">Keeps running if you leave</span></div>
       <div class="fs-body center"><h1>🔒 Security+ focus</h1>
       ${ringSVG(l / f.total, fmt(l), f.pausedLeft != null ? "paused" : "remaining", "var(--good)")}
-      <p class="muted small">Phone face down. One video or lesson, take notes in your own words, then quiz yourself.</p></div>
+      ${(() => { const n = secNext(); return n ? `<p class="small">Next up: <b>${esc(n.title)}</b></p>` : ""; })()}
+      <p class="muted small">Phone face down. One lesson, notes in your own words. A 5-question quiz pops up when the hour ends.</p></div>
       <div class="fs-actions">
         <button class="btn ghost block" data-fp>${f.pausedLeft != null ? "Resume" : "Pause"}</button>
-        <button class="btn ghost block" data-learn>Open Learn tab</button>
+        <button class="btn ghost block" data-learn>${secNext() ? "Open next lesson" : "Open Learn tab"}</button>
         <button class="link" data-end>End early and log time</button>
       </div>`;
   };
@@ -173,7 +186,7 @@ function openFocus() {
     const f = focusState(); if (!f) return;
     if (e.target.closest("[data-x]")) return close();
     if (e.target.closest("[data-fp]")) { if (f.pausedLeft != null) { f.endAt = Date.now() + f.pausedLeft * 1000; f.pausedLeft = null; } else f.pausedLeft = focusLeft(f); I.save(); draw(); }
-    if (e.target.closest("[data-learn]")) { close(); A.go("learn"); }
+    if (e.target.closest("[data-learn]")) { const n = secNext(); close(); if (n && typeof n.open === "function") n.open(); else A.go("learn"); }
     if (e.target.closest("[data-end]")) { completeFocus(true); close(); }
   };
   el._draw = draw; draw();

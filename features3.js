@@ -177,13 +177,17 @@ function techCard() {
   if (!L || !L.techniqueOfWeek) return "";
   try { const t = L.techniqueOfWeek(); if (!t) return ""; return `<div class="card"><h2>🥋 Technique of the week</h2><b>${esc(t.title)}</b>${t.summary ? `<div class="small muted">${esc(t.summary)}</div>` : ""}<button class="btn ghost small" style="margin-top:8px" data-f3="tech">Study it</button></div>`; } catch { return ""; }
 }
+function studyCard() {
+  const L = A.learn; if (!L || typeof L.fightStudy !== "function") return "";
+  try { const t = L.fightStudy(); if (!t) return ""; return `<div class="card"><h2>🎥 Fight study</h2><b>${esc(t.title || "")}</b>${t.summary ? `<div class="small muted">${esc(t.summary)}</div>` : ""}${typeof t.open === "function" ? `<button class="btn ghost small" style="margin-top:8px" data-f3="study">Break it down</button>` : ""}</div>`; } catch { return ""; }
+}
 window.Features3 = {
   beforeWorkout(dd) { return swapBanner(dd) + movementCard(dd) + (I.cur === today() ? recoveryCard(dd) : ""); },
   workoutExtras(dd) {
     const f = finisherFor(I.cur);
     return `<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn ghost small grow" data-f3="warmup">🔥 Warm-up 5 min</button><button class="btn ghost small grow" data-f3="finisher">⚡ Finisher: ${esc(f.name)}</button></div>`;
   },
-  fighterExtras() { return techCard() + bodyCard(); },
+  fighterExtras() { return techCard() + studyCard() + bodyCard(); },
   _test: { recoveryAdvice }
 };
 document.addEventListener("click", e => {
@@ -198,5 +202,6 @@ document.addEventListener("click", e => {
   if (f === "snack") startSnack();
   if (f === "body") openBody();
   if (f === "tech") { try { A.learn.techniqueOfWeek().open(); } catch {} }
+  if (f === "study") { try { A.learn.fightStudy().open(); } catch {} }
 });
 })();
