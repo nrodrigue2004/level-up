@@ -44,7 +44,7 @@
       'Get a common denominator: ' + n1 + '/' + d1 + ' = ' + (n1 * d2) + '/' + D + ' and ' + n2 + '/' + d2 + ' = ' + (n2 * d1) + '/' + D + '. Add the tops: ' + N + '/' + D + ', which simplifies to ' + right + '. You never add the bottoms.');
   };
   G.mathFracMul = function () {
-    var a = r(1, 7), b = r(2, 9), c = r(1, 7), d = r(2, 9), div = Math.random() < .5;
+    var b = r(2, 9), a = r(1, b - 1), d = r(2, 9), c = r(1, 9), div = Math.random() < .5; if (c === d) c = d - 1;
     var right = div ? frac(a * d, b * c) : frac(a * c, b * d);
     var w = div ? [frac(a * c, b * d), frac(b * c, a * d), frac(a + c, b + d)] : [frac(a * d, b * c), frac(a + c, b + d), frac(a * c, b + d)];
     return mc((div ? 'Divide' : 'Multiply') + ': <b>' + a + '/' + b + (div ? ' ÷ ' : ' × ') + c + '/' + d + '</b>', right, w,

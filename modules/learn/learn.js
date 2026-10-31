@@ -12,7 +12,7 @@
   (function css() {
     var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = BASE + 'learn.css'; document.head.appendChild(l);
   })();
-  var CONTENT = ['content/glossary.js', 'content/secplus.js', 'content/cs.js', 'content/tech.js', 'content/ai.js', 'content/career.js', 'content/mma.js', 'content/world.js', 'content/k12-math.js', 'content/k12-english.js', 'content/k12-science.js', 'content/k12-history.js'];
+  var CONTENT = ['content/glossary.js', 'content/secplus.js', 'content/cs.js', 'content/tech.js', 'content/ai.js', 'content/career.js', 'content/mma.js', 'content/world.js', 'content/k12-math.js', 'content/k12-english.js', 'content/k12-science.js', 'content/k12-history.js', 'content/life.js'];
 
   function loadScript(src) {
     return new Promise(function (res) {

@@ -98,6 +98,7 @@
 .rh-empty { text-align: center; padding: 26px 10px; color: var(--muted); display: flex; flex-direction: column; gap: 10px; align-items: center; }
 
 /* ---------- player overlay ---------- */
+.rh-player[hidden], .rh-scrim[hidden] { display: none !important; }
 .rh-player {
   position: fixed; inset: 0; z-index: 60; background: var(--bg); color: var(--ink); display: flex; flex-direction: column;
   padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
