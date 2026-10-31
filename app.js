@@ -187,6 +187,7 @@ function renderToday() {
       <button class="felt ${(dd.felt || []).includes(D.affirmations[affIdx]) ? "on" : ""}" data-act="felt" data-v="${esc(D.affirmations[affIdx])}">${(dd.felt || []).includes(D.affirmations[affIdx]) ? "❤️ Felt this today" : "🤍 Felt this today?"}</button>
       ${feltCount(D.affirmations[affIdx]) ? `<span class="muted small"> · ${feltCount(D.affirmations[affIdx])}× total</span>` : ""}</div>
   </div>
+<!--IDEAL-->
 
   ${soberCard(false)}
   <div class="card"><h2>How are you feeling? <span class="right">${dd.mood ? dd.mood + "/10" : ""}</span></h2>
@@ -222,7 +223,7 @@ function renderToday() {
   <div class="card"><h2>✅ My ideal day</h2>`;
   for (const sec of D.checklist) {
     const done = sec.items.filter(i => isChecked(i[0])).length;
-    const open = (S.openSecs || {})[sec.id] !== false;
+    const pref = (S.openSecs || {})[sec.id]; const open = pref != null ? pref !== false : done < sec.items.length; // finished sections fold away
     html += `<details class="section" data-sec="${sec.id}" ${open ? "open" : ""}><summary>${sec.icon} ${esc(sec.title)}<span class="count ${done === sec.items.length ? "done" : ""}">${done}/${sec.items.length}</span></summary>`;
     for (const [id, label, kind = ""] of sec.items) {
       const on = isChecked(id);
@@ -232,7 +233,7 @@ function renderToday() {
       if (kind.startsWith("counter:")) extra = `<div class="counter"><button data-act="jobs" data-v="-1">−</button><b>${dd.jobs}</b> / ${kind.split(":")[2]} sent<button data-act="jobs" data-v="1">+</button></div>`;
       if (kind === "auto:water") extra = `<div class="extra">${dd.water} of ${goal} oz · fills in from the water tracker</div>`;
       if (kind === "auto:passage") extra = `<button class="link" data-act="sub" data-v="journal">Read today's passage →</button>`;
-      if (kind === "learning") extra = `<div class="chips" style="margin-top:8px">${D.learningTopics.map(t => `<button class="chip ${dd.topic === t ? "on" : ""}" data-act="topic" data-v="${esc(t)}">${esc(t)}</button>`).join("")}</div>`;
+      if (kind === "learning") extra = `<div class="chips" style="margin-top:8px">${D.learningTopics.map(t => `<button class="chip ${dd.topic === t ? "on" : ""}" data-act="topic" data-v="${esc(t)}">${esc(t)}</button>`).join("")}</div>${TOPIC_SUBJ[dd.topic] && window.App.learn ? `<button class="link" data-act="learnsubj" data-v="${TOPIC_SUBJ[dd.topic]}">Open ${esc(dd.topic)} in Learn →</button>` : ""}`;
       html += `<div class="item ${on ? "on" : ""}" data-act="check" data-id="${id}"><div class="box"></div><div class="label">${esc(label)}${extra ? `<div>${extra}</div>` : ""}</div></div>`;
       if (kind === "recipe:smoothie" && S.showRecipe) {
         const tot = D.smoothie.ingredients.reduce((a, x) => [a[0] + x[1], a[1] + x[2]], [0, 0]);
@@ -244,8 +245,10 @@ function renderToday() {
     html += `</details>`;
   }
   html += `</div>`;
-  return html;
+  const k = html.indexOf('<div class="card"><h2>✅ My ideal day</h2>');
+  return html.slice(0, k).replace("<!--IDEAL-->", html.slice(k));
 }
+const TOPIC_SUBJ = { "Spanish": "spanish", "Computer science": "cs", "History": "history", "Piano or guitar": "music", "Psychology": "mind", "Philosophy": "mind", "Science": "science" };
 
 // ---------- FOOD ----------
 function renderFood() {
@@ -786,6 +789,7 @@ document.addEventListener("click", e => {
   const act = el.dataset.act, v = el.dataset.v;
   const dd = () => day();
   switch (act) {
+    case "learnsubj": { window.App.go("learn"); setTimeout(() => window.App.learn.openSubject(el.dataset.v), 60); return; }
     case "aff": { const x = dd(); x.affIdx = ((x.affIdx ?? dayIndex(cur, D.affirmations.length)) + 1) % D.affirmations.length; break; }
     case "mood": dd().mood = dd().mood === +v ? null : +v; break;
     case "water": dd().water = Math.max(0, dd().water + +v); if (dd().water >= S.settings.waterGoal && dd().water - +v < S.settings.waterGoal) toast("💧 80 oz! Water goal done"); break;

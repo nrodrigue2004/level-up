@@ -434,7 +434,7 @@ window.Features = {
     if (isToday) {
       const f = focusState();
       const mdone = MORNING.filter(s => (dd.boot || {})[s.key]).length;
-      h += `<div class="routines">
+      h += `<div class="routines strip">
         <button data-feat="morning"><span>☀️</span>Morning boot<small>${mdone ? `${mdone}/${MORNING.length}` : "6 AM start"}</small></button>
         <button data-feat="focus"><span>🔒</span>Security+ hour<small>${f ? fmt(focusLeft(f)) + " left" : I.isChecked("secplus") ? "Done ✓" : "60 min focus"}</small></button>
         <button data-feat="boxing"><span>🥊</span>Boxing rounds<small>${I.isChecked("boxing") ? "Done ✓" : "Timer + combos"}</small></button>

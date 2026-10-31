@@ -218,3 +218,9 @@ details.section summary .count { font-family: var(--display); font-size: 15px; l
 .fart-top { display: flex; justify-content: space-between; color: var(--muted); margin-bottom: 4px; }
 .fart-top b { color: var(--text); font-family: var(--display); text-transform: uppercase; letter-spacing: .04em; font-size: 15px; }
 .fart-cap { margin: 6px 0 10px; font-size: 15px; line-height: 1.4; min-height: 3em; }
+/* Today tools as a two-row swipe strip */
+.routines.strip { grid-auto-flow: column; grid-template-columns: none; grid-template-rows: auto auto; grid-auto-columns: 47%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-right: -16px; padding-right: 16px; }
+.routines.strip::-webkit-scrollbar { display: none; }
+.routines.strip button { scroll-snap-align: start; }
+.routines.strip button.wide { grid-column: auto; }
+.item .label { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 12px; } .item .label > div { margin: 0; } .item .label .chips { flex-basis: 100%; }
