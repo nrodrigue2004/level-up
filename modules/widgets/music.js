@@ -118,7 +118,7 @@
     const kit = window.Features && window.Features._kit; if (!kit) return;
     const { el, close } = kit.overlay(() => {});
     const draw = () => {
-      el.innerHTML = `<div class="fs-top"><button class="icon-btn" data-x>✕</button><span class="muted small">Music room</span></div>
+      el.innerHTML = `<div class="fs-top"><button class="icon-btn" data-x>✕</button><span class="muted small grow">Music room</span>${A.learn && A.learn.openSubject ? `<button class="btn ghost small" data-lessons>Music lessons</button>` : ""}</div>
         <div class="fs-body" style="padding-top:0;justify-content:flex-start"><h1 style="margin:0 0 8px">Music room</h1>
         <div class="subtabs" style="position:static;margin:0 0 12px">${[["piano", "Piano"], ["guitar", "Guitar"], ["tuner", "Tuner"]].map(([k, l]) => `<button class="${k === which ? "on" : ""}" data-mt="${k}">${l}</button>`).join("")}</div>
         ${which === "guitar" ? `<div class="chips" style="margin-bottom:10px">${Object.keys(SHAPES).map(c => `<button class="chip" data-ch="${c}">${c}</button>`).join("")}</div>` : which === "piano" ? `<div class="chips" style="margin-bottom:10px">${["C", "G", "D", "A", "E", "F", "Am", "Em", "Dm", "Cmaj7", "G7"].map(c => `<button class="chip" data-pc="${c}">${c}</button>`).join("")}</div>` : ""}
@@ -127,6 +127,7 @@
       if (which === "piano") piano(host, {}); else if (which === "guitar") fretboard(host, {}); else tuner(host, {});
     };
     el.addEventListener("click", e => {
+      if (e.target.closest("[data-lessons]")) { try { speechSynthesis.cancel(); } catch {} close(); A.go && A.go("learn"); setTimeout(() => A.learn.openSubject("music"), 50); return; }
       if (e.target.closest("[data-x]")) return close();
       const t = e.target.closest("[data-mt]"); if (t) { which = t.dataset.mt; draw(); }
       const ch = e.target.closest("[data-ch]"); if (ch) { fretboard(el.querySelector("[data-tool]"), { chord: ch.dataset.ch, frets: 5 }); }

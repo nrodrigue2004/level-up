@@ -77,13 +77,14 @@
     const { el, close } = kit.overlay(() => {});
     let cur = start && ROUTINES[start] ? start : "bounce";
     const draw = () => {
-      el.innerHTML = `<div class="fs-top"><button class="icon-btn" data-x>✕</button><span class="muted small">Dance practice</span></div>
+      el.innerHTML = `<div class="fs-top"><button class="icon-btn" data-x>✕</button><span class="muted small grow">Dance practice</span>${A.learn && A.learn.openSubject ? `<button class="btn ghost small" data-lessons>Dance lessons</button>` : ""}</div>
         <div class="fs-body" style="padding-top:0"><h1 style="margin:0 0 8px">Dance practice</h1>
         <div class="chips" style="margin-bottom:12px">${Object.entries(ROUTINES).map(([k, r]) => `<button class="chip ${k === cur ? "on" : ""}" data-r="${k}">${esc(r.name)}</button>`).join("")}</div>
         <div data-tool></div><p class="small muted" style="margin-top:14px">Practice the steps here with the clicks, then put on the real song. Phone on the floor, volume up.</p></div>`;
       rhythm(el.querySelector("[data-tool]"), { routine: cur }, r => { if (r && r.correct) A.xp && A.xp.award("dance:" + cur + ":" + new Date().toISOString().slice(0, 10), 10, "spirit"); });
     };
-    el.addEventListener("click", e => { if (e.target.closest("[data-x]")) { try { speechSynthesis.cancel(); } catch {} return close(); } const r = e.target.closest("[data-r]"); if (r) { cur = r.dataset.r; draw(); } });
+    el.addEventListener("click", e => {
+      if (e.target.closest("[data-lessons]")) { try { speechSynthesis.cancel(); } catch {} close(); A.go && A.go("learn"); setTimeout(() => A.learn.openSubject("dance"), 50); return; } if (e.target.closest("[data-x]")) { try { speechSynthesis.cancel(); } catch {} return close(); } const r = e.target.closest("[data-r]"); if (r) { cur = r.dataset.r; draw(); } });
     draw();
   }
   A.widgets = A.widgets || {}; A.widgets.rhythm = { mount: rhythm };
