@@ -625,7 +625,7 @@
       A.award('learn:review:' + dayStr(), 15, 'mind');
     } else if (P.mode === 'exam') {
       var sc = Math.round(100 + 800 * (P.graded ? P.right / P.graded : 0));
-      d.exams = (d.exams || []).concat({ at: dayStr(), score: sc, n: P.graded }).slice(-20);
+      d.exams = (d.exams || []).concat({ at: dayStr(), score: sc, n: P.graded, subj: P.subjId }).slice(-20);
       A.award('learn:exam:' + P.subjId + ':' + dayStr(), sc >= 750 ? 80 : 40, 'mind');
     } else if (P.mode === 'drill') {
       A.award('learn:drill:' + P.subjId + ':' + dayStr(), 10, (P.subj && P.subj.stat) || 'mind');
