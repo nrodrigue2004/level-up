@@ -29,5 +29,7 @@
     .observe(document.body, { childList: true, subtree: true, characterData: true });
   document.addEventListener("DOMContentLoaded", () => scan(document.body));
   scan(document.body);
+  const hdr = document.querySelector("header.top");
+  if (hdr && window.ResizeObserver) new ResizeObserver(() => document.documentElement.style.setProperty("--hdr", hdr.offsetHeight - 1 + "px")).observe(hdr);
   window.Icons = { icon, map: MAP };
 })();

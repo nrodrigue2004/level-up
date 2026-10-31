@@ -9,7 +9,7 @@
       "teaser": "A real-looking email. Find every red flag before it finds you.",
       "links": [
         "sp-social",
-        "sp-email-sec"
+        "sp-filter"
       ],
       "cards": [
         {

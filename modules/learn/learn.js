@@ -12,7 +12,7 @@
   (function css() {
     var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = BASE + 'learn.css'; document.head.appendChild(l);
   })();
-  var CONTENT = ['content/glossary.js', 'content/secplus.js', 'content/cs.js', 'content/tech.js', 'content/ai.js', 'content/career.js', 'content/mma.js', 'content/world.js', 'content/k12-math.js', 'content/k12-english.js', 'content/k12-science.js', 'content/k12-history.js', 'content/life.js'];
+  var CONTENT = ['content/glossary.js', 'content/secplus.js', 'content/secplus-d1.js', 'content/secplus-d2.js', 'content/secplus-d3.js', 'content/secplus-d4.js', 'content/secplus-d5.js', 'content/secplus-labs.js', 'content/cs.js', 'content/tech.js', 'content/ai.js', 'content/career.js', 'content/mma.js', 'content/world.js', 'content/k12-math.js', 'content/k12-english.js', 'content/k12-science.js', 'content/k12-history.js', 'content/life.js'];
 
   function loadScript(src) {
     return new Promise(function (res) {
@@ -535,7 +535,7 @@
     if (graded && P.mode === 'lesson') { var skip = h('button', { class: 'rh-link' }, 'Skip'); skip.onclick = function () { P.i++; renderCard(); }; foot.appendChild(skip); }
     foot.appendChild(cont);
     var card = h('div', { class: 'rh-card' }); cardHost.appendChild(card);
-    if (item.review || (P.mode !== 'lesson' && P.mode !== 'placement')) {
+    if (P.mode !== 'exam' && (item.review || (P.mode !== 'lesson' && P.mode !== 'placement'))) {
       var src = LESSONS[item.k.split('#')[0]];
       if (src) card.appendChild(h('span', { class: 'rh-kind' }, '<i style="background:' + src.s.color + '"></i>' + esc(src.s.name) + ' · ' + esc(src.l.title)));
     }

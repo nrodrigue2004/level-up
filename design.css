@@ -127,3 +127,4 @@ details.section summary .count { font-family: var(--display); font-size: 15px; l
 /* hacker theme keeps its mono feel */
 :root[data-theme="hacker"] body, :root[data-theme="hacker"] h1, :root[data-theme="hacker"] h2, :root[data-theme="hacker"] .btn,
 :root[data-theme="hacker"] nav.tabs button, :root[data-theme="hacker"] .subtabs button { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+.subtabs { top: var(--hdr, calc(74px + env(safe-area-inset-top))); }
