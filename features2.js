@@ -85,6 +85,7 @@ const CHALLENGES = [
   ["💧", "Hit 40 oz of water before noon", "discipline"], ["🧩", "Solve all four puzzles today", "mind"], ["📵", "Phone in another room for the first hour after waking", "discipline"],
   ["🥋", "Drill one footwork pattern for 5 minutes", "tech"], ["✍️", "Write a 5-sentence journal entry about your ideal job", "mind"], ["🤖", "Ask an AI to quiz you on something, and answer without looking anything up", "mind"]
 ];
+if (window.EXTRA_CHALLENGES) CHALLENGES.push(...window.EXTRA_CHALLENGES);
 // walk a fixed shuffled order so a challenge doesn't come back until all have been used
 let _perm = null;
 function challengeFor(d) {

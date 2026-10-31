@@ -61,9 +61,20 @@ const SNACKS = [
   { name: "Mobility minute x2", moves: [["Cat-cow", 30, "On hands and knees, or standing"], ["Hip circles", 30, ""], ["Thoracic twists", 30, "Rotate the upper back"], ["Ankle circles", 30, ""]] },
   { name: "Get your heart up", moves: [["Jumping jacks", 30, ""], ["High knees", 30, ""], ["Squat to reach", 30, ""], ["Fast feet", 30, "Stay on the balls of your feet"]] }
 ];
+// Extra move bank: each snack is 4 moves drawn fresh from its theme, so the same snack rarely repeats.
+const MOVE_BANK = {
+  "Shadowbox snack": [["Jab-cross, light", 30, "1-2, stay loose"], ["Slip and roll", 30, "Bob under imaginary hooks"], ["Hooks", 30, "Turn the hips"], ["Free flow", 30, "Mix everything"], ["Double jab, cross", 30, "Step in on the second jab"], ["Body shots", 30, "Bend the knees, don't lean"], ["Pivot out", 30, "Jab, then pivot off your lead foot"], ["Uppercuts", 30, "Short, from the legs"], ["Counter drill", 30, "Slip right, throw a 2"], ["Speed round", 30, "Fast straight punches, snap back"], ["Teeps", 30, "Push kick, return to stance"], ["Knees", 30, "Grab the imaginary head, drive the hips"]],
+  "Desk reset": [["Stand and reach up", 30, "Big stretch to the ceiling"], ["Hip flexor stretch, left", 30, "Lunge, squeeze your glute"], ["Hip flexor stretch, right", 30, ""], ["Chest opener", 30, "Hands behind you, open the chest"], ["Neck rolls", 30, "Slow, both ways"], ["Wrist stretch", 30, "Palms up, then down"], ["Shoulder blade squeezes", 30, "Pinch and release"], ["Forward fold", 30, "Let the head hang"], ["Doorway pec stretch", 30, "Lean through the door frame"], ["Calf stretch", 30, "Heel down, wall push"], ["Side bends", 30, "Reach over, both sides"], ["Spinal twist", 30, "Seated or standing"]],
+  "Dance groove": [["Two-step", 30, "Step side, together, other side, together. Bend the knees."], ["Body roll", 30, "Chest, belly, hips. Slow is fine."], ["Cupid Shuffle steps", 30, "To the right, to the left, kick, walk it by yourself"], ["Bounce", 30, "Knees soft, bounce on the beat"], ["Shoulder isolation", 30, "Only the shoulders move"], ["Electric Slide grapevine", 30, "Step, behind, step, touch"], ["Rock step", 30, "Back, forward, both feet planted"], ["Heel-toe", 30, "Tap heel, tap toe, switch"], ["Hip sway", 30, "Weight side to side"], ["Freestyle", 30, "Anything, just keep the beat"]],
+  "Leg burner": [["Wall sit", 45, "Thighs parallel, back flat"], ["Calf raises", 30, "Slow up, slow down"], ["Squats", 45, "Sit back like a chair"], ["Reverse lunges", 40, "Alternate legs"], ["Glute bridges", 40, "Squeeze at the top"], ["Squat pulses", 30, "Stay low"], ["Lateral lunges", 40, "Push the hips back"], ["Single-leg balance", 30, "15 seconds each leg"], ["Sumo squats", 40, "Wide stance, toes out"]],
+  "Mobility minute x2": [["Cat-cow", 30, "On hands and knees, or standing"], ["Hip circles", 30, ""], ["Thoracic twists", 30, "Rotate the upper back"], ["Ankle circles", 30, ""], ["World's greatest stretch", 40, "Lunge, elbow down, rotate up"], ["Deep squat hold", 30, "Heels down if you can"], ["90/90 hip switch", 40, "Sit, rotate knees side to side"], ["Arm circles", 30, "Small to big"], ["Leg swings", 30, "Front-back, then side-side"], ["Thread the needle", 30, "On all fours, reach under"]],
+  "Get your heart up": [["Jumping jacks", 30, ""], ["High knees", 30, ""], ["Squat to reach", 30, ""], ["Fast feet", 30, "Stay on the balls of your feet"], ["Mountain climbers", 30, "Hips low"], ["Skaters", 30, "Side to side"], ["Butt kicks", 30, ""], ["Shadowbox sprint", 30, "Nonstop punches"], ["Burpees", 30, "Go at your own pace"], ["Jump rope (real or fake)", 30, "Light on the feet"]]
+};
 const MOVE_GOAL = 20;
 function startSnack() {
-  const s = SNACKS[Math.floor(Math.random() * SNACKS.length)];
+  const base = SNACKS[Math.floor(Math.random() * SNACKS.length)], bank = (MOVE_BANK[base.name] || base.moves).slice();
+  for (let i = bank.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bank[i], bank[j]] = [bank[j], bank[i]]; }
+  const s = { name: base.name, moves: bank.slice(0, 4) };
   runIntervals(s.name, s.moves.map(([name, secs, cue]) => ({ name, secs, cue })), () => {
     const dd = I.day(today()); dd.moveMin = (dd.moveMin || 0) + Math.round(s.moves.reduce((a, m) => a + m[1], 0) / 60);
     A.xp.award(`move:${today()}:${dd.moveMin}`, 5, "str"); I.save();
