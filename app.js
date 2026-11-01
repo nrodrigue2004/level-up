@@ -889,5 +889,16 @@ document.addEventListener("visibilitychange", () => {
 window.Planner = { get state() { return S; }, render };
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", render); else setTimeout(render);
 
-if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  // Apply updates on the next open instead of the one after: when a new version takes over, reload once and say so.
+  const hadSW = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register("sw.js").then(reg => {
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") reg.update().catch(() => {}); });
+  }).catch(() => {});
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    try { if (!hadSW || sessionStorage.getItem("luReloaded")) return; sessionStorage.setItem("luReloaded", "1"); localStorage.setItem("luUpdated", "1"); } catch (e) { return; }
+    location.reload();
+  });
+  try { if (localStorage.getItem("luUpdated")) { localStorage.removeItem("luUpdated"); setTimeout(() => toast("Updated to the latest version ✓"), 800); } } catch (e) {}
+}
 })();
