@@ -322,3 +322,12 @@
 .rh pre, .rh code, .rh-player pre, .rh-player code { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
 .rh-art { display:flex; justify-content:center; background: var(--card-2, rgba(0,0,0,.04)); border-radius: 14px; padding: 8px; }
 .rh-art svg { width: 100%; max-width: 340px; height: auto; }
+/* Collapsible units for long subjects */
+.rh-fold > summary { list-style: none; cursor: pointer; -webkit-tap-highlight-color: transparent; padding: 6px 0; }
+.rh-fold > summary::-webkit-details-marker { display: none; }
+.rh-fold > summary h2 { flex: 1; min-width: 0; }
+.rh-fold > summary h2::before { content: "\25B8"; display: inline-block; width: 1em; color: var(--muted); transition: transform .15s; }
+.rh-fold[open] > summary h2::before { transform: rotate(90deg); }
+.rh-fold .rh-fold-n { font-variant-numeric: tabular-nums; }
+.rh-fold:not([open]) { border-bottom: 1px solid var(--line, rgba(127,127,127,.2)); }
+.rh-fold:not([open]) > summary small:not(.rh-fold-n) { display: none; }

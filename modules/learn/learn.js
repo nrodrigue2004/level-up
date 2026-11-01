@@ -12,7 +12,7 @@
   (function css() {
     var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = BASE + 'learn.css'; document.head.appendChild(l);
   })();
-  var CONTENT = ['content/glossary.js', 'content/secplus.js', 'content/secplus-d1.js', 'content/secplus-d2.js', 'content/secplus-d3.js', 'content/secplus-d4.js', 'content/secplus-d5.js', 'content/secplus-labs.js', 'content/secplus-bank.js', 'content/fe.js', 'content/projects.js', 'content/cs.js', 'content/cs-reboot.js', 'content/cs-langs.js', 'content/cs-degree.js', 'content/cs-degree2.js', 'content/tech.js', 'content/ai.js', 'content/career.js', 'content/mma.js', 'content/mma-guard.js', 'content/world.js', 'content/world-maps.js', 'content/k12-math.js', 'content/math-adv.js', 'content/k12-english.js', 'content/k12-science.js', 'content/k12-history.js', 'content/life.js', 'content/music.js', 'content/dance.js', 'content/spanish.js', 'content/mind.js', 'content/tech-deep.js', 'content/explain-pack.js'];
+  var CONTENT = ['content/glossary.js', 'content/secplus.js', 'content/secplus-d1.js', 'content/secplus-d2.js', 'content/secplus-d3.js', 'content/secplus-d4.js', 'content/secplus-d5.js', 'content/secplus-labs.js', 'content/secplus-bank.js', 'content/fe.js', 'content/projects.js', 'content/cs.js', 'content/cs-reboot.js', 'content/cs-langs.js', 'content/cs-degree.js', 'content/cs-degree2.js', 'content/tech.js', 'content/ai.js', 'content/career.js', 'content/mma.js', 'content/mma-guard.js', 'content/world.js', 'content/world-maps.js', 'content/k12-math.js', 'content/math-adv.js', 'content/k12-english.js', 'content/k12-science.js', 'content/k12-history.js', 'content/life.js', 'content/music.js', 'content/dance.js', 'content/spanish.js', 'content/mind.js', 'content/tech-deep.js', 'content/thicken.js', 'content/explain-pack.js'];
 
   function loadScript(src) {
     return new Promise(function (res) {
@@ -340,9 +340,20 @@
       host.appendChild(h('button', { class: 'rh-cont', style: 'background:var(--good)', 'data-drill': s.id },
         '<span class="play">\uD83C\uDFAF</span><span class="t"><b>Practice drill</b><span>10 freshly generated problems. New numbers every time, so you\'re learning the skill, not memorizing answers.</span></span>'));
     }
-    s.units.forEach(function (u) {
-      var sec = h('div', { class: 'rh-unit' });
-      sec.innerHTML = '<div class="rh-unit-h"><h2>' + esc(u.name) + '</h2>' + (u.tag ? '<small>' + esc(u.tag) + '</small>' : '') + '</div>' + (u.blurb ? '<p class="blurb">' + esc(u.blurb) + '</p>' : '');
+    // Long subjects: units collapse, and the first unit with unfinished lessons is open (the user's toggles are remembered for this visit).
+    var fold = s.units.length > 4, firstOpen = -1;
+    LV.openU = LV.openU || {};
+    if (fold) s.units.some(function (u, ui) { if (u.lessons.some(function (l) { return !d.done[l.id]; })) { firstOpen = ui; return true; } });
+    s.units.forEach(function (u, ui) {
+      var nd = u.lessons.filter(function (l) { return d.done[l.id]; }).length, key = s.id + ':' + ui;
+      var sec = h(fold ? 'details' : 'div', { class: 'rh-unit' + (fold ? ' rh-fold' : '') });
+      var head = '<h2>' + esc(u.name) + '</h2>' + (u.tag ? '<small>' + esc(u.tag) + '</small>' : '') + (fold ? '<small class="rh-fold-n">' + nd + '/' + u.lessons.length + (nd === u.lessons.length ? ' ✓' : '') + '</small>' : '');
+      if (fold) {
+        var open = key in LV.openU ? LV.openU[key] : ui === firstOpen;
+        if (open) sec.setAttribute('open', '');
+        sec.addEventListener('toggle', function () { LV.openU[key] = sec.open; });
+      }
+      sec.innerHTML = (fold ? '<summary class="rh-unit-h">' + head + '</summary>' : '<div class="rh-unit-h">' + head + '</div>') + (u.blurb ? '<p class="blurb">' + esc(u.blurb) + '</p>' : '');
       u.lessons.forEach(function (l, i) {
         var done = d.done[l.id];
         var b = h('button', { class: 'rh-lesson' + (done ? ' done' : ''), 'data-lesson': l.id });
