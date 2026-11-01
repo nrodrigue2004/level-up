@@ -16,7 +16,7 @@
 
   function loadScript(src) {
     return new Promise(function (res) {
-      var s = document.createElement('script'); s.src = BASE + src;
+      var s = document.createElement('script'); s.async = false; s.src = BASE + src; // async=false keeps execution in CONTENT order (patch files depend on it)
       s.onload = function () { res(true); }; s.onerror = function () { res(false); };
       document.head.appendChild(s);
     });
