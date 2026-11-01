@@ -1185,6 +1185,20 @@
           if (!LESSONS[id]) return null;
           return { title: LESSONS[id].l.title, open: function () { A.go('learn'); startLesson(id); } };
         },
+        review: function () { A.go('learn'); if (dueReviews().length) startMixed('review'); else A.toast('Nothing due right now'); },
+        // Best next lesson: resume the last lesson if it isn't finished, otherwise the next unfinished lesson in that subject, falling back to Security+.
+        todayPick: function () {
+          var d = data(), last = (d.trail || []).slice().reverse().filter(function (id) { return LESSONS[id]; })[0], id = null, sj = null;
+          if (last && !d.done[last]) { id = last; sj = LESSONS[last].s; }
+          else if (last) {
+            sj = LESSONS[last].s; var flat = [];
+            sj.units.forEach(function (u) { u.lessons.forEach(function (l) { flat.push(l.id); }); });
+            var at = flat.indexOf(last);
+            id = flat.slice(at + 1).concat(flat.slice(0, at)).filter(function (x) { return !d.done[x]; })[0] || null;
+          }
+          if (!id) { var n = window.App.learn.secplusNext(); if (!n) return null; return { title: n.title, subj: 'Security+', open: n.open }; }
+          return { title: LESSONS[id].l.title, subj: sj.name, open: function () { A.go('learn'); startLesson(id); } };
+        },
         quiz: function (subj, n, onDone) { A.go('learn'); startQuiz(subj || 'secplus', n || 5, onDone); },
         techniqueOfWeek: function () {
           var ids = ['mma-hipbump', 'mma-triangle', 'mma-posmap-guard', 'mma-combos', 'mma-kicks', 'mma-posmap-mount'].filter(function (id) { return LESSONS[id]; });
