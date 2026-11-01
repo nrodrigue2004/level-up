@@ -40,7 +40,7 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().
 
 let cur = todayISO();
 let tab = "today";
-let sub = "plan";
+let sub = "daily";
 let calMonth = cur.slice(0, 7);
 
 const blankDay = () => ({ checks: {}, mood: null, worked: null, water: 0, food: [], journal: "", learned: "", song: { title: "", artist: "" }, topic: null, jobs: 0, wkDone: {}, wkNotes: "", passageRead: false });
@@ -171,9 +171,9 @@ function bottle(frac) {
 const feltCount = a => Object.values(S.days).filter(x => (x.felt || []).includes(a)).length;
 
 // ---------- TODAY (with sub pages) ----------
-const SUBS = [["plan", "Plan"], ["food", "Food"], ["journal", "Journal"], ["calendar", "Calendar"]];
+const SUBS = [["daily", "Daily"], ["plan", "Plan"], ["food", "Food"], ["journal", "Journal"], ["calendar", "Calendar"]];
 function renderTodayTab() {
-  const views = { plan: renderToday, food: renderFood, journal: renderJournal, calendar: renderCalendar };
+  const views = { daily: renderDaily, plan: renderToday, food: renderFood, journal: renderJournal, calendar: renderCalendar };
   return `<div class="subtabs">${SUBS.map(([k, l]) => `<button class="${sub === k ? "on" : ""}" data-act="sub" data-v="${k}">${l}</button>`).join("")}</div>` + views[sub]();
 }
 function renderToday() {
@@ -249,6 +249,38 @@ function renderToday() {
   return html.slice(0, k).replace("<!--IDEAL-->", html.slice(k));
 }
 const TOPIC_SUBJ = { "Spanish": "spanish", "Computer science": "cs", "History": "history", "Piano or guitar": "music", "Psychology": "mind", "Philosophy": "mind", "Science": "science" };
+
+// ---------- DAILY: the short screen with only the everyday stuff ----------
+function renderDaily() {
+  const dd = day(), F = window.Features, L = window.App.learn, isToday = cur === todayISO();
+  const w = workoutFor(cur), t = foodTotals(), pg = S.settings.proteinGoal, wg = S.settings.waterGoal;
+  const [mDone, mTot] = F && F.morningProgress ? F.morningProgress(cur) : [0, 0];
+  const pz = ["sudoku", "crossword", "word", "groups"].map(k => !!((S.puzzles[cur] || {})[k] || {}).solved);
+  let lesson = null; try { lesson = L && L.secplusNext ? L.secplusNext() : null; } catch (e) {}
+  if (!lesson && !renderDaily.retried) { renderDaily.retried = true; setTimeout(() => { if (tab === "today" && sub === "daily") render(); }, 900); } // Learn loads a moment after the shell
+  const due = L && L.dueReviewCount ? L.dueReviewCount() : 0;
+  const rows = [
+    { id: "boot", ic: "☀️", t: "Morning boot", s: mTot ? `${mDone} of ${mTot} steps` : "", done: mTot && mDone >= mTot, act: isToday ? `<button class="btn small" data-feat="morning">${mDone ? "Resume" : "Start"}</button>` : "" },
+    { id: "water", ic: "💧", t: "Water", s: `${dd.water} / ${wg} oz`, bar: dd.water / wg, done: dd.water >= wg, act: `<button class="btn small ghost" data-act="water" data-v="16">+16 oz</button>` },
+    { id: "pro", ic: "🍗", t: "Protein", s: `${t.pro} / ${pg} g`, bar: t.pro / pg, done: t.pro >= pg, act: `<button class="btn small ghost" data-act="addpreset" data-i="0">Smoothie</button><button class="btn small ghost" data-act="addpreset" data-i="1">Dinner</button>` },
+    { id: "wk", ic: "🏋️", t: "Workout", s: w.name, done: dd.worked === true, act: `<button class="btn small ${dd.worked === true ? "" : "ghost"}" data-act="worked" data-v="yes">${dd.worked === true ? "Done ✓" : "Mark done"}</button>` },
+    { id: "sec", ic: "🔒", t: "Security+ hour", s: isChecked("secplus") ? "Done" : (F && F.focusLeftText && F.focusLeftText()) || "60 min focus", done: isChecked("secplus"), act: isToday && !isChecked("secplus") ? `<button class="btn small" data-feat="focus">${F && F.focusLeftText && F.focusLeftText() ? "Open" : "Start"}</button>` : "" },
+    { id: "jobs", ic: "💼", t: "Job applications", s: `${dd.jobs} of 5 sent`, done: dd.jobs >= 5, act: `<div class="counter"><button data-act="jobs" data-v="-1">−</button><b>${dd.jobs}</b><button data-act="jobs" data-v="1">+</button></div>` },
+    { id: "learn", ic: "📚", t: due ? `${due} review card${due === 1 ? "" : "s"} due` : "Today's lesson", s: lesson ? lesson.title : "Pick anything in Learn", done: false, act: `<button class="btn small" data-act="dailylesson">${due && L.review ? "Review" : "Open"}</button>` },
+    { id: "pz", ic: "🧩", t: "Daily puzzles", s: `<span class="pzdots">${pz.map(x => `<i class="${x ? "on" : ""}"></i>`).join("")}</span> ${pz.filter(Boolean).length} of 4`, done: pz.every(Boolean), act: `<button class="btn small ghost" data-act="dailyplay">Play</button>` },
+    { id: "night", ic: "🌙", t: "Night shutdown", s: dd.win ? "Win logged" : "Win, lesson, tomorrow's top task", done: !!dd.win, act: isToday ? `<button class="btn small ghost" data-feat="night">Start</button>` : "" }
+  ];
+  const left = rows.filter(r => !r.done).length;
+  return `<div class="card daily-hero">${ring(progress())}<div class="grow"><div class="muted small">${prettyDate(cur)}</div>
+      <div class="daily-left">${left ? `${left} thing${left === 1 ? "" : "s"} left today` : "Everything done today 🏆"}</div>
+      <div class="muted small">${D.affirmations[(dd.affIdx ?? dayIndex(cur, D.affirmations.length)) % D.affirmations.length]}</div></div></div>
+    <div class="card daily">${rows.map(r => `<div class="drow ${r.done ? "done" : ""}"><span class="dic">${r.ic}</span>
+      <div class="grow"><b>${r.t}</b><div class="small muted">${r.s}</div>${r.bar != null ? `<div class="dbar"><i style="width:${Math.min(100, r.bar * 100)}%"></i></div>` : ""}</div>
+      <div class="dact">${r.done && r.id !== "wk" ? `<span class="dcheck">✓</span>` : r.act}</div></div>`).join("")}</div>
+    <div class="card"><h2>How are you feeling? <span class="right">${dd.mood ? dd.mood + "/10" : ""}</span></h2>
+      <div class="mood">${Array.from({ length: 10 }, (_, i) => i + 1).map(v => `<button data-act="mood" data-v="${v}" class="${dd.mood === v ? "on" : ""}" style="${dd.mood === v ? "background:" + moodColor(v) : ""}">${v}</button>`).join("")}</div></div>
+    <button class="btn ghost block" data-act="sub" data-v="plan">Full plan, checklist and tools →</button>`;
+}
 
 // ---------- FOOD ----------
 function renderFood() {
@@ -789,6 +821,8 @@ document.addEventListener("click", e => {
   const act = el.dataset.act, v = el.dataset.v;
   const dd = () => day();
   switch (act) {
+    case "dailylesson": { const L = window.App.learn; if (!L) return; if (L.dueReviewCount && L.dueReviewCount() && L.review) return L.review(); const n = L.secplusNext && L.secplusNext(); if (n) return n.open(); return window.App.go("learn"); }
+    case "dailyplay": window.App.go("play"); return;
     case "learnsubj": { window.App.go("learn"); setTimeout(() => window.App.learn.openSubject(el.dataset.v), 60); return; }
     case "aff": { const x = dd(); x.affIdx = ((x.affIdx ?? dayIndex(cur, D.affirmations.length)) + 1) % D.affirmations.length; break; }
     case "mood": dd().mood = dd().mood === +v ? null : +v; break;

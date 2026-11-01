@@ -229,3 +229,25 @@ details.section summary .count { font-family: var(--display); font-size: 15px; l
 .xw { width: min(100%, calc(100svh - 520px)) !important; min-width: 200px; }
 .wg { width: min(100%, calc((100svh - 420px) * 5 / 6)); min-width: 220px; margin-left: auto; margin-right: auto; }
 .kb button { height: 50px; }
+/* Daily screen */
+.daily-hero { display: flex; gap: 14px; align-items: center; }
+.daily-left { font-family: var(--display); font-weight: 700; font-size: 26px; text-transform: uppercase; letter-spacing: .02em; line-height: 1.1; margin: 2px 0 4px; }
+.daily { padding: 4px 14px; }
+.drow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.drow:last-child { border-bottom: 0; }
+.drow b { font-size: 16px; }
+.drow .dic { width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; font-size: 0; }
+.drow .dic .ic { width: 19px; height: 19px; }
+.drow.done .dic { background: var(--good-soft); color: var(--good); }
+.drow.done b { color: var(--muted); }
+.drow .dact { display: flex; gap: 6px; flex: none; align-items: center; }
+.drow .dact .btn.small { padding: 7px 10px; font-size: 13px; }
+.drow .dact .counter { margin: 0; }
+.dcheck { color: var(--good); font-weight: 800; font-size: 20px; padding: 0 8px; }
+.dbar { height: 5px; border-radius: 3px; background: var(--line); margin-top: 6px; overflow: hidden; }
+.dbar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.drow.done .dbar i { background: var(--good); }
+.pzdots { display: inline-flex; gap: 4px; vertical-align: middle; margin-right: 4px; }
+.pzdots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line-2, var(--line)); }
+.pzdots i.on { background: var(--good); }
+.drow > .grow { flex: 1 1 auto; min-width: 0; } .drow .dact .btn.small { white-space: nowrap; }

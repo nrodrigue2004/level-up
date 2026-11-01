@@ -426,6 +426,8 @@ function recapCard(d) {
 
 // ================= hooks into the shell =================
 window.Features = {
+  morningProgress(d) { const dd = I.peek(d) || {}; return [MORNING.filter(x => (dd.boot || {})[x.key]).length, MORNING.length]; },
+  focusLeftText() { const f = focusState(); return f ? fmt(focusLeft(f)) + " left" : null; },
   todayTop() {
     const d = I.cur, dd = I.peek(d) || {}, isToday = d === nowISO();
     let h = "";
